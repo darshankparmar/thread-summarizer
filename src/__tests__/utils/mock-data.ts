@@ -58,7 +58,7 @@ export const mockForumsApiResponse = {
 }
 
 // Mock fetch responses
-export const mockFetchSuccess = (data: any) => {
+export const mockFetchSuccess = (data: unknown) => {
   global.fetch = jest.fn(() =>
     Promise.resolve({
       ok: true,
