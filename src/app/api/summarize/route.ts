@@ -1,0 +1,240 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { threadFetcher } from '@/services/thread-fetcher';
+import { aiService } from '@/services/ai-service';
+import { cacheManager } from '@/services/cache-manager';
+import { performanceMonitor } from '@/services/performance-monitor';
+import { SummarizeRequest } from '@/types';
+import { apiMiddleware, InputValidator } from '@/lib/middleware';
+
+/**
+ * POST /api/summarize
+ * Generate AI-powered summary for a forum thread
+ * 
+ * Requirements: 1.1, 1.3, 1.4, 1.5
+ */
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Apply security and validation middleware
+  return apiMiddleware.apply(request, async (req: NextRequest) => {
+    return await handleSummarizeRequest(req);
+  });
+}
+
+/**
+ * Core summarize request handler (after middleware validation)
+ */
+async function handleSummarizeRequest(request: NextRequest): Promise<NextResponse> {
+  const startTime = Date.now();
+  
+  try {
+    // Parse and validate request body
+    const body: SummarizeRequest = await request.json();
+    
+    // Validate request body structure
+    const bodyValidation = InputValidator.validateRequestBody(body);
+    if (!bodyValidation.isValid) {
+      return NextResponse.json({
+        success: false,
+        error: bodyValidation.error || 'Invalid request body',
+        cached: false,
+        generatedAt: new Date().toISOString()
+      }, { status: 400 });
+    }
+
+    // Validate and sanitize thread ID
+    const threadIdValidation = InputValidator.validateThreadId(body.threadId);
+    if (!threadIdValidation.isValid || !threadIdValidation.sanitized) {
+      return NextResponse.json({
+        success: false,
+        error: threadIdValidation.error || 'Invalid thread ID',
+        cached: false,
+        generatedAt: new Date().toISOString()
+      }, { status: 400 });
+    }
+
+    const sanitizedThreadId = threadIdValidation.sanitized;
+
+    // Start performance tracking
+    const requestId = performanceMonitor.startRequest(sanitizedThreadId);
+
+    // Step 1: Fetch thread data
+    const threadResult = await threadFetcher.fetchThreadData(sanitizedThreadId);
+    
+    if (!threadResult.success || !threadResult.data) {
+      // Handle thread fetching errors
+      performanceMonitor.completeRequest(requestId, threadResult.error);
+      return NextResponse.json({
+        success: false,
+        error: threadResult.error || 'Failed to fetch thread data',
+        cached: false,
+        generatedAt: new Date().toISOString()
+      }, { status: threadResult.error?.includes('not found') ? 404 : 500 });
+    }
+
+    const { thread, posts, lastPostTimestamp } = threadResult.data;
+
+    // Step 2: Check cache first (Requirement 1.4)
+    const cacheKey = `summary_${sanitizedThreadId}_${lastPostTimestamp}`;
+    const cachedEntry = cacheManager.get(sanitizedThreadId, lastPostTimestamp);
+    
+    if (cachedEntry) {
+      // Return cached result instantly (< 100ms requirement)
+      performanceMonitor.markCacheHit(requestId, cacheKey);
+      const responseTime = Date.now() - startTime;
+      performanceMonitor.completeRequest(requestId);
+      
+      return NextResponse.json({
+        success: true,
+        data: cachedEntry.data,
+        cached: true,
+        generatedAt: cachedEntry.generatedAt
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=3600', // 1 hour cache header
+          'X-Response-Time': `${responseTime}ms`,
+          'X-Cache-Status': 'HIT'
+        }
+      });
+    }
+
+    // Step 3: Check if thread is suitable for AI analysis
+    if (!threadFetcher.isSuitableForAnalysis(threadResult.data)) {
+      // Return fallback for insufficient content (Requirement 7.1)
+      const fallbackData = {
+        summary: ["Thread has insufficient content for analysis"],
+        keyPoints: ["No meaningful discussion content available"],
+        contributors: [],
+        sentiment: "Neutral" as const,
+        healthScore: 5,
+        healthLabel: "Needs Attention" as const
+      };
+
+      // Cache the fallback response
+      cacheManager.set(sanitizedThreadId, lastPostTimestamp, fallbackData);
+
+      const responseTime = Date.now() - startTime;
+      performanceMonitor.completeRequest(requestId);
+
+      return NextResponse.json({
+        success: true,
+        data: fallbackData,
+        cached: false,
+        generatedAt: new Date().toISOString()
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=3600',
+          'X-Response-Time': `${responseTime}ms`,
+          'X-Cache-Status': 'MISS',
+          'X-Fallback': 'INSUFFICIENT_CONTENT'
+        }
+      });
+    }
+
+    // Step 4: Generate AI summary (Requirement 1.1)
+    const aiStartTime = Date.now();
+    const aiResult = await aiService.generateSummary(thread, posts);
+    const aiProcessingTime = Date.now() - aiStartTime;
+    
+    performanceMonitor.recordAIProcessingTime(requestId, aiProcessingTime);
+    
+    if (!aiResult.success || !aiResult.data) {
+      // Handle AI processing errors (Requirement 7.2)
+      const responseTime = Date.now() - startTime;
+      performanceMonitor.completeRequest(requestId, aiResult.error);
+
+      return NextResponse.json({
+        success: false,
+        error: aiResult.error || 'AI processing failed',
+        cached: false,
+        generatedAt: new Date().toISOString()
+      }, { 
+        status: 500,
+        headers: {
+          'X-Response-Time': `${responseTime}ms`,
+          'X-Cache-Status': 'MISS',
+          'X-AI-Status': 'FAILED'
+        }
+      });
+    }
+
+    // Step 5: Cache the successful result (Requirement 1.3)
+    cacheManager.set(sanitizedThreadId, lastPostTimestamp, aiResult.data);
+
+    // Step 6: Record performance metrics
+    const responseTime = Date.now() - startTime;
+    performanceMonitor.completeRequest(requestId);
+
+    // Ensure response time meets requirements (Requirement 6.1)
+    if (responseTime > 3000) {
+      console.warn(`Summary generation took ${responseTime}ms, exceeding 3s requirement for thread ${sanitizedThreadId}`);
+    }
+
+    // Step 7: Return successful response
+    return NextResponse.json({
+      success: true,
+      data: aiResult.data,
+      cached: false,
+      generatedAt: new Date().toISOString()
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=3600',
+        'X-Response-Time': `${responseTime}ms`,
+        'X-Cache-Status': 'MISS',
+        'X-AI-Status': aiResult.fallback ? 'FALLBACK' : 'SUCCESS'
+      }
+    });
+
+  } catch (error) {
+    // Handle unexpected errors
+    const responseTime = Date.now() - startTime;
+    console.error('Unexpected error in /api/summarize:', error);
+
+    return NextResponse.json({
+      success: false,
+      error: 'An unexpected error occurred while processing the request',
+      cached: false,
+      generatedAt: new Date().toISOString()
+    }, { 
+      status: 500,
+      headers: {
+        'X-Response-Time': `${responseTime}ms`,
+        'X-Cache-Status': 'ERROR'
+      }
+    });
+  }
+}
+
+/**
+ * Handle unsupported HTTP methods with middleware
+ */
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  return apiMiddleware.apply(request, async () => {
+    return NextResponse.json({
+      success: false,
+      error: 'Method not allowed. Use POST to generate summaries.',
+      cached: false,
+      generatedAt: new Date().toISOString()
+    }, { status: 405 });
+  });
+}
+
+export async function PUT(request: NextRequest): Promise<NextResponse> {
+  return apiMiddleware.apply(request, async () => {
+    return NextResponse.json({
+      success: false,
+      error: 'Method not allowed. Use POST to generate summaries.',
+      cached: false,
+      generatedAt: new Date().toISOString()
+    }, { status: 405 });
+  });
+}
+
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
+  return apiMiddleware.apply(request, async () => {
+    return NextResponse.json({
+      success: false,
+      error: 'Method not allowed. Use POST to generate summaries.',
+      cached: false,
+      generatedAt: new Date().toISOString()
+    }, { status: 405 });
+  });
+}
