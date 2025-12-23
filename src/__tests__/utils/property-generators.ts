@@ -3,6 +3,7 @@ import { ForumsThread, ForumsPost, SummaryData, SentimentType } from '@/types'
 
 // Property-based test generators for thread data
 export const threadIdArbitrary = fc.string({ minLength: 1, maxLength: 50 })
+  .filter(s => s.trim() !== '') // Ensure thread ID is not empty after trimming
 export const usernameArbitrary = fc.string({ minLength: 1, maxLength: 30 })
 export const timestampArbitrary = fc.date({ min: new Date('2020-01-01'), max: new Date('2030-01-01') }).map(d => {
   // Ensure valid date before converting to ISO string

@@ -50,13 +50,16 @@ export const summarySchema = {
   additionalProperties: false
 } as const;
 
-// AI prompt template for thread analysis
+// AI prompt template for thread analysis with optimization for faster processing
 export const createPromptTemplate = (
   thread: ForumsThread,
   posts: ForumsPost[]
 ): string => {
   const postCount = posts.length;
-  const postsText = posts
+  
+  // Optimize prompt length for faster processing (Requirement 6.1, 6.2)
+  const optimizedPosts = optimizePostsForPrompt(posts);
+  const postsText = optimizedPosts
     .map(post => `@${post.user.username}: ${post.body}`)
     .join('\n\n');
 
@@ -78,6 +81,50 @@ Return a JSON object with:
 Focus on factual, neutral analysis. Represent disagreements fairly.
 `.trim();
 };
+
+/**
+ * Optimize posts for AI prompt to reduce processing time while maintaining quality
+ * Requirement 6.1, 6.2
+ */
+function optimizePostsForPrompt(posts: ForumsPost[]): ForumsPost[] {
+  // If we have a reasonable number of posts, return all
+  if (posts.length <= 20) {
+    return posts;
+  }
+
+  // For larger threads, use intelligent sampling to maintain quality while reducing size
+  const optimized: ForumsPost[] = [];
+  
+  // Always include first few posts (context)
+  optimized.push(...posts.slice(0, 3));
+  
+  // Include last few posts (recent context)
+  optimized.push(...posts.slice(-3));
+  
+  // Sample middle posts, prioritizing longer posts (likely more substantive)
+  const middlePosts = posts.slice(3, -3);
+  if (middlePosts.length > 0) {
+    // Sort by post length and take top posts
+    const substantivePosts = middlePosts
+      .filter(post => post.body.length > 50) // Filter out very short posts
+      .sort((a, b) => b.body.length - a.body.length)
+      .slice(0, Math.min(14, middlePosts.length)); // Take up to 14 substantial posts
+    
+    // Sort back to chronological order
+    substantivePosts.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    optimized.splice(3, 0, ...substantivePosts);
+  }
+  
+  // Remove duplicates (in case of overlap)
+  const seen = new Set<string>();
+  return optimized.filter(post => {
+    if (seen.has(post.id)) {
+      return false;
+    }
+    seen.add(post.id);
+    return true;
+  });
+}
 
 // AI service interface
 export interface AIServiceResponse {
