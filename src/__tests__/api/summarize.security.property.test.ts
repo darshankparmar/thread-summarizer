@@ -67,6 +67,22 @@ jest.mock('@/services/performance-monitor', () => ({
 
 // Import after mocking
 
+// Helper function to check malicious patterns (mirrors InputValidator logic)
+function containsMaliciousPatterns(input: string): boolean {
+  const maliciousPatterns = [
+    /<script/i,           // Script tags
+    /javascript:/i,       // JavaScript protocol
+    /on\w+\s*=/i,        // Event handlers
+    /\.\.\//,            // Path traversal
+    /[<>'"]/,            // HTML/XML characters
+    /\x00/,              // Null bytes
+    /[\r\n]/,            // Line breaks
+    /[{}]/,              // Curly braces (potential template injection)
+  ];
+
+  return maliciousPatterns.some(pattern => pattern.test(input));
+}
+
 /**
  * Property-based tests for API security
  * Feature: thread-summarizer, Property 12: Server-Side Security
@@ -174,7 +190,9 @@ describe('API Security Property Tests', () => {
               typeof (requestBody as Record<string, unknown>).threadId === 'string' &&
               ((requestBody as Record<string, unknown>).threadId as string).trim() !== '' &&
               Object.keys(requestBody).length === 1 &&
-              Object.keys(requestBody)[0] === 'threadId'
+              Object.keys(requestBody)[0] === 'threadId' &&
+              // Check that threadId doesn't contain malicious patterns
+              !containsMaliciousPatterns((requestBody as Record<string, unknown>).threadId as string)
             ) {
               // Valid request body structure
               expect(validation.isValid).toBe(true);

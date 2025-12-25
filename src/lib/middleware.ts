@@ -153,6 +153,12 @@ export class InputValidator {
       return { isValid: false, error: 'threadId must be a string' };
     }
 
+    // Validate the threadId content using the threadId validator
+    const threadIdValidation = this.validateThreadId(bodyObj.threadId);
+    if (!threadIdValidation.isValid) {
+      return { isValid: false, error: threadIdValidation.error };
+    }
+
     return { isValid: true };
   }
 }
