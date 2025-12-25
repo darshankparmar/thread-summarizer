@@ -2,10 +2,8 @@
  * Unit tests for ThreadSummaryPanel component rendering
  * Tests loading states, error states, and successful summary display
  * Verifies accessibility and responsive design
- * **Validates: Requirements 11.1, 11.2**
  */
 
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ThreadSummaryPanel from '@/components/ThreadSummaryPanel';
 import { SummaryData } from '@/types';
@@ -40,7 +38,6 @@ describe('ThreadSummaryPanel Component', () => {
 
   /**
    * Test initial render state
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('renders initial state with generate button', () => {
     render(<ThreadSummaryPanel threadId="test-thread-123" />);
@@ -60,12 +57,12 @@ describe('ThreadSummaryPanel Component', () => {
 
   /**
    * Test loading state display
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('displays loading state when generating summary', async () => {
     // Mock a delayed response
     (fetch as jest.Mock).mockImplementation(() => 
       new Promise(resolve => setTimeout(() => resolve({
+        ok: true,
         json: () => Promise.resolve({ success: true, data: mockSummaryData })
       }), 100))
     );
@@ -88,11 +85,13 @@ describe('ThreadSummaryPanel Component', () => {
 
   /**
    * Test error state display
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('displays error state when API call fails', async () => {
-    const errorMessage = 'Failed to generate summary';
+    const errorMessage = 'Thread not found. Please check the thread ID.';
+    // Mock a 404 error which doesn't retry
     (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
       json: () => Promise.resolve({ success: false, error: errorMessage })
     });
 
@@ -102,7 +101,7 @@ describe('ThreadSummaryPanel Component', () => {
     fireEvent.click(generateButton);
     
     await waitFor(() => {
-      expect(screen.getByText(/error/i)).toBeInTheDocument();
+      expect(screen.getByText('Error generating summary')).toBeInTheDocument();
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
     });
     
@@ -113,10 +112,13 @@ describe('ThreadSummaryPanel Component', () => {
 
   /**
    * Test network error handling
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('displays network error when fetch fails', async () => {
-    (fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    // Mock multiple network errors since the component retries network errors
+    (fetch as jest.Mock)
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
     render(<ThreadSummaryPanel threadId="test-thread-123" />);
     
@@ -124,16 +126,17 @@ describe('ThreadSummaryPanel Component', () => {
     fireEvent.click(generateButton);
     
     await waitFor(() => {
-      expect(screen.getByText(/network error occurred/i)).toBeInTheDocument();
-    });
+      expect(screen.getByText('Error generating summary')).toBeInTheDocument();
+      expect(screen.getByText('Network error. Please check your connection and try again.')).toBeInTheDocument();
+    }, { timeout: 10000 });
   });
 
   /**
    * Test successful summary display
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('displays summary data when API call succeeds', async () => {
     (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
       json: () => Promise.resolve({ success: true, data: mockSummaryData })
     });
 
@@ -161,14 +164,17 @@ describe('ThreadSummaryPanel Component', () => {
       expect(screen.getByText('Positive')).toBeInTheDocument();
       
       // Should show health score
-      expect(screen.getByText('8/10')).toBeInTheDocument();
-      expect(screen.getByText('(Healthy)')).toBeInTheDocument();
+      expect(screen.getAllByText((content, element) => {
+        return element?.textContent?.includes('8/10') || false
+      })[0]).toBeInTheDocument();
+      expect(screen.getAllByText((content, element) => {
+        return element?.textContent?.includes('Healthy') || false
+      })[0]).toBeInTheDocument();
     });
   });
 
   /**
    * Test accessibility features
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('has proper accessibility attributes', () => {
     render(<ThreadSummaryPanel threadId="test-thread-123" />);
@@ -185,7 +191,6 @@ describe('ThreadSummaryPanel Component', () => {
 
   /**
    * Test responsive design classes
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('applies responsive design classes', () => {
     const { container } = render(<ThreadSummaryPanel threadId="test-thread-123" />);
@@ -201,7 +206,6 @@ describe('ThreadSummaryPanel Component', () => {
 
   /**
    * Test custom className prop
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('applies custom className when provided', () => {
     const customClass = 'custom-panel-class';
@@ -215,10 +219,10 @@ describe('ThreadSummaryPanel Component', () => {
 
   /**
    * Test API request format
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('sends correct API request format', async () => {
     (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
       json: () => Promise.resolve({ success: true, data: mockSummaryData })
     });
 
@@ -228,22 +232,23 @@ describe('ThreadSummaryPanel Component', () => {
     fireEvent.click(generateButton);
     
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/summarize', {
+      expect(fetch).toHaveBeenCalledWith('/api/summarize', expect.objectContaining({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ threadId: 'test-thread-123' }),
-      });
+        signal: expect.any(AbortSignal)
+      }));
     });
   });
 
   /**
    * Test compact panel layout constraint
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('maintains compact panel layout', async () => {
     (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
       json: () => Promise.resolve({ success: true, data: mockSummaryData })
     });
 

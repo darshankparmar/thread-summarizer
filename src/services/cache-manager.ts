@@ -40,7 +40,6 @@ export interface CacheConfig {
 
 /**
  * Cache manager service for handling summary caching with performance optimization
- * Implements requirements 1.3, 1.5, 6.3, 6.4
  */
 export class CacheManager {
   private cache = new Map<string, CacheEntry>();
@@ -67,7 +66,6 @@ export class CacheManager {
 
   /**
    * Generate cache key following the pattern: summary_<thread_id>_<last_post_timestamp>
-   * Requirement 1.3, 6.3
    */
   generateCacheKey(threadId: string, lastPostTimestamp: string): string {
     if (!threadId || !lastPostTimestamp) {
@@ -106,7 +104,6 @@ export class CacheManager {
 
   /**
    * Store summary data in cache with proper key generation
-   * Requirement 1.3, 6.4
    */
   set(threadId: string, lastPostTimestamp: string, data: SummaryData): void {
     const cacheKey = this.generateCacheKey(threadId, lastPostTimestamp);
@@ -132,7 +129,6 @@ export class CacheManager {
 
   /**
    * Retrieve summary data from cache
-   * Requirement 1.4, 6.1
    */
   get(threadId: string, lastPostTimestamp: string): CacheEntry | null {
     this.stats.totalRequests++;
@@ -159,7 +155,6 @@ export class CacheManager {
 
   /**
    * Check if cached summary exists for thread
-   * Requirement 1.4
    */
   has(threadId: string, lastPostTimestamp: string): boolean {
     const entry = this.get(threadId, lastPostTimestamp);
@@ -168,7 +163,6 @@ export class CacheManager {
 
   /**
    * Invalidate cache entries for a thread when new posts are added
-   * Requirement 1.5, 6.4
    */
   invalidateThread(threadId: string): number {
     let invalidatedCount = 0;
@@ -185,7 +179,6 @@ export class CacheManager {
 
   /**
    * Invalidate old cache entries for a thread (when timestamp changes)
-   * Requirement 1.5
    */
   private invalidateOldEntries(threadId: string, currentTimestamp: string): void {
     for (const [cacheKey, entry] of this.cache.entries()) {
@@ -228,7 +221,6 @@ export class CacheManager {
 
   /**
    * Get cache statistics for performance monitoring
-   * Requirement 6.1, 6.2
    */
   getStats(): CacheStats {
     return { ...this.stats };

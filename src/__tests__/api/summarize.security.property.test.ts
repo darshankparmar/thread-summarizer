@@ -1,7 +1,5 @@
 /**
  * Property-based tests for API security
- * Feature: thread-summarizer, Property 12: Server-Side Security
- * Validates: Requirements 8.1, 8.2
  */
 
 import fc from 'fast-check';
@@ -85,17 +83,13 @@ function containsMaliciousPatterns(input: string): boolean {
 
 /**
  * Property-based tests for API security
- * Feature: thread-summarizer, Property 12: Server-Side Security
- * Validates: Requirements 8.1, 8.2
  */
 
 
 describe('API Security Property Tests', () => {
   /**
-   * Property 12: Server-Side Security
    * For any API processing request, all API calls should execute server-side 
    * and no API keys should be exposed to the client
-   * Validates: Requirements 8.1, 8.2
    */
   describe('Property 12: Server-Side Security', () => {
     test('should validate and sanitize all thread ID inputs', async () => {

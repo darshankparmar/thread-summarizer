@@ -3,7 +3,6 @@ import { ForumsApiClient } from '@/services/forums-api';
 import { forumsThreadArbitrary, forumsPostArbitrary } from '../utils/property-generators';
 
 // Feature: thread-summarizer, Property 13: API Integration Completeness
-// **Validates: Requirements 9.1, 9.2, 9.3**
 
 describe('Forums API Integration Property Tests', () => {
   let apiClient: ForumsApiClient;

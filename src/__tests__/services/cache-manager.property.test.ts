@@ -24,9 +24,8 @@ describe('Cache Manager Property Tests', () => {
   });
 
   /**
-   * Property 2: Cache Key Format Consistency
-   * Feature: thread-summarizer, Property 2: For any summary generation, the cache key should match the pattern summary_<thread_id>_<last_post_timestamp> and cache invalidation should occur when timestamps change
-   * Validates: Requirements 1.3, 1.5, 6.3, 6.4
+   * Property: Cache Key Format Consistency
+   * Feature: thread-summarizer, Property: For any summary generation, the cache key should match the pattern summary_<thread_id>_<last_post_timestamp> and cache invalidation should occur when timestamps change
    */
   test('Property 2: Cache Key Format Consistency', async () => {
     await fc.assert(
@@ -60,9 +59,8 @@ describe('Cache Manager Property Tests', () => {
   });
 
   /**
-   * Property 2: Cache Invalidation on Timestamp Change
-   * Feature: thread-summarizer, Property 2: Cache invalidation should occur when timestamps change
-   * Validates: Requirements 1.5, 6.4
+   * Property: Cache Invalidation on Timestamp Change
+   * Feature: thread-summarizer, Property: Cache invalidation should occur when timestamps change
    */
   test('Property 2: Cache Invalidation on Timestamp Change', async () => {
     await fc.assert(
@@ -94,9 +92,8 @@ describe('Cache Manager Property Tests', () => {
   });
 
   /**
-   * Property 2: Thread Invalidation
-   * Feature: thread-summarizer, Property 2: All cache entries for a thread should be invalidated when requested
-   * Validates: Requirements 1.5, 6.4
+   * Property: Thread Invalidation
+   * Feature: thread-summarizer, Property: All cache entries for a thread should be invalidated when requested
    */
   test('Property 2: Thread Invalidation', async () => {
     await fc.assert(
@@ -146,7 +143,6 @@ describe('Cache Manager Property Tests', () => {
   /**
    * Property 3: Cache Performance Requirements - Response Time Validation
    * Feature: thread-summarizer, Property 3: For any cached summary request, the response time should be under 100ms, and for uncached requests, processing should complete within 3 seconds
-   * Validates: Requirements 1.4, 6.1, 6.2
    */
   test('Property 3: Cache Performance Requirements - Response Time Validation', async () => {
     await fc.assert(
@@ -197,7 +193,6 @@ describe('Cache Manager Property Tests', () => {
   /**
    * Property 3: Cache Performance Requirements - Uncached Response Time Limits
    * Feature: thread-summarizer, Property 3: Uncached requests should have reasonable time limits
-   * Validates: Requirements 6.1
    */
   test('Property 3: Cache Performance Requirements - Uncached Response Time Limits', async () => {
     await fc.assert(
@@ -240,7 +235,6 @@ describe('Cache Manager Property Tests', () => {
   /**
    * Property 3: Cache Statistics Accuracy
    * Feature: thread-summarizer, Property 3: Cache statistics should accurately reflect hit/miss ratios
-   * Validates: Requirements 6.2
    */
   test('Property 3: Cache Statistics Accuracy', async () => {
     await fc.assert(
@@ -322,7 +316,6 @@ describe('Cache Manager Property Tests', () => {
   /**
    * Property: Cache Key Validation and Error Handling
    * Feature: thread-summarizer, Property 2: Cache key generation should handle edge cases and validate inputs
-   * Validates: Requirements 6.3
    */
   test('Property: Cache Key Validation and Error Handling', async () => {
     await fc.assert(
@@ -365,7 +358,6 @@ describe('Cache Manager Property Tests', () => {
   /**
    * Property: Cache Size Management and Eviction
    * Feature: thread-summarizer, Property 2: Cache should manage size and evict entries appropriately
-   * Validates: Requirements 6.4
    */
   test('Property: Cache Size Management and Eviction', async () => {
     // Create cache with small limits for testing

@@ -3,7 +3,6 @@ import { ForumsApiClient, ForumsApiError } from '@/services/forums-api';
 import { createMockThread, createMockPost } from '../utils/mock-data';
 
 // Unit tests for ThreadFetcher error handling
-// **Validates: Requirements 9.4**
 
 describe('ThreadFetcher Error Handling Unit Tests', () => {
   let threadFetcher: ThreadFetcherService;
@@ -15,7 +14,7 @@ describe('ThreadFetcher Error Handling Unit Tests', () => {
       fetchCompleteThread: jest.fn(),
       fetchThread: jest.fn(),
       fetchThreadPosts: jest.fn(),
-    } as jest.Mocked<ForumsApiClient>;
+    } as Partial<jest.Mocked<ForumsApiClient>> as jest.Mocked<ForumsApiClient>;
 
     // Create thread fetcher with mock client
     threadFetcher = new ThreadFetcherService(mockApiClient);

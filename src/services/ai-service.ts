@@ -57,7 +57,7 @@ export const createPromptTemplate = (
 ): string => {
   const postCount = posts.length;
   
-  // Optimize prompt length for faster processing (Requirement 6.1, 6.2)
+  // Optimize prompt length for faster processing
   const optimizedPosts = optimizePostsForPrompt(posts);
   const postsText = optimizedPosts
     .map(post => `@${post.user.username}: ${post.body}`)
@@ -84,7 +84,6 @@ Focus on factual, neutral analysis. Represent disagreements fairly.
 
 /**
  * Optimize posts for AI prompt to reduce processing time while maintaining quality
- * Requirement 6.1, 6.2
  */
 function optimizePostsForPrompt(posts: ForumsPost[]): ForumsPost[] {
   // If we have a reasonable number of posts, return all
@@ -231,7 +230,7 @@ export class AIService {
     thread: ForumsThread,
     posts: ForumsPost[]
   ): AIServiceResponse | null {
-    // Empty thread case (Requirement 7.1)
+    // Empty thread case
     if (posts.length === 0) {
       return {
         success: true,
@@ -247,7 +246,7 @@ export class AIService {
       };
     }
 
-    // Single or very few posts case (Requirement 7.3)
+    // Single or very few posts case
     if (posts.length <= 2) {
       const contributorCount = new Set(posts.map(p => p.user.username)).size;
       return {
@@ -280,7 +279,7 @@ export class AIService {
   ): AIServiceResponse {
     const aiError = this.parseAIServiceError(error);
 
-    // Rate limiting case (Requirement 7.4)
+    // Rate limiting case
     if (aiError.type === AIServiceErrorType.RATE_LIMIT) {
       return {
         success: false,
@@ -290,7 +289,7 @@ export class AIService {
       };
     }
 
-    // Timeout case (Requirement 7.4)
+    // Timeout case
     if (aiError.type === AIServiceErrorType.TIMEOUT) {
       return {
         success: false,
@@ -310,7 +309,7 @@ export class AIService {
       };
     }
 
-    // General AI processing failure (Requirement 7.2)
+    // General AI processing failure
     return {
       success: false,
       error: "AI processing failed. Showing basic thread statistics.",

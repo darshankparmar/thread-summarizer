@@ -2,7 +2,6 @@ import { ForumsApiClient, ForumsApiError } from '@/services/forums-api';
 import { createMockThread } from '../utils/mock-data';
 
 // Unit tests for API error handling
-// **Validates: Requirements 9.4**
 
 describe('Forums API Error Handling Unit Tests', () => {
   let apiClient: ForumsApiClient;

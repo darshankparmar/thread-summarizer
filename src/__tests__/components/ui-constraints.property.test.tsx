@@ -1,9 +1,5 @@
 /**
  * Property-based tests for UI constraints
- * Feature: thread-summarizer, Property 6: Contributor Format Validation
- * Feature: thread-summarizer, Property 8: Sentiment Display Format  
- * Feature: thread-summarizer, Property 14: UI Layout Constraints
- * **Validates: Requirements 3.3, 4.2, 11.1, 11.2, 11.3**
  */
 
 import * as fc from 'fast-check';
@@ -18,7 +14,6 @@ describe('UI Constraints Property Tests', () => {
   /**
    * Property 6: Contributor Format Validation
    * For any contributor output, the format should match the pattern `@username – description` exactly
-   * **Validates: Requirements 3.3**
    */
   test('Property 6: Contributor format validation', () => {
     fc.assert(fc.property(
@@ -46,9 +41,7 @@ describe('UI Constraints Property Tests', () => {
   });
 
   /**
-   * Property 8: Sentiment Display Format
    * For any sentiment output in the UI, both text label and emoji indicator should be present
-   * **Validates: Requirements 4.2**
    */
   test('Property 8: Sentiment display format', () => {
     fc.assert(fc.property(
@@ -75,9 +68,7 @@ describe('UI Constraints Property Tests', () => {
   });
 
   /**
-   * Property 8 (continued): Sentiment display in rendered component
    * For any sentiment output in the UI, both text label and emoji indicator should be present
-   * **Validates: Requirements 4.2**
    */
   test('Property 8: Sentiment display in UI contains both emoji and text', () => {
     fc.assert(fc.property(
@@ -107,9 +98,7 @@ describe('UI Constraints Property Tests', () => {
   });
 
   /**
-   * Property 14: UI Layout Constraints
    * For any summary display, all outputs should be contained within a single compact panel without charts, graphs, or heat maps
-   * **Validates: Requirements 11.1, 11.2, 11.3**
    */
   test('Property 14: UI layout constraints - single compact panel', () => {
     fc.assert(fc.property(
@@ -148,9 +137,7 @@ describe('UI Constraints Property Tests', () => {
   });
 
   /**
-   * Property 14 (continued): ThreadSummaryPanel layout constraints
    * For any summary display, all outputs should be contained within a single compact panel
-   * **Validates: Requirements 11.1, 11.2, 11.3**
    */
   test('Property 14: ThreadSummaryPanel single compact panel layout', () => {
     fc.assert(fc.property(
@@ -178,9 +165,7 @@ describe('UI Constraints Property Tests', () => {
   });
 
   /**
-   * Property 14 (continued): Text-based presentation constraint
    * All content should prioritize text-based presentation with minimal visual indicators
-   * **Validates: Requirements 11.2, 11.3**
    */
   test('Property 14: Text-based presentation without complex visuals', () => {
     fc.assert(fc.property(

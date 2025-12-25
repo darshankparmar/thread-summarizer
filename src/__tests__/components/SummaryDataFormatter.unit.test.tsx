@@ -1,7 +1,6 @@
 /**
  * Unit tests for SummaryDataFormatter components and utilities
  * Tests formatting functions and display components
- * **Validates: Requirements 11.1, 11.2**
  */
 
 import React from 'react';
@@ -39,7 +38,6 @@ describe('SummaryDataFormatter Utilities', () => {
   
   /**
    * Test contributor formatting function
-   * **Validates: Requirements 3.3**
    */
   describe('formatContributor', () => {
     test('formats contributor with @username pattern', () => {
@@ -75,7 +73,6 @@ describe('SummaryDataFormatter Utilities', () => {
 
   /**
    * Test health label derivation
-   * **Validates: Requirements 5.2, 5.3, 5.4, 5.5**
    */
   describe('getHealthLabel', () => {
     test('returns "Healthy" for scores 7-10', () => {
@@ -100,7 +97,6 @@ describe('SummaryDataFormatter Utilities', () => {
 
   /**
    * Test sentiment emoji mapping
-   * **Validates: Requirements 4.2**
    */
   describe('getSentimentEmoji', () => {
     test('returns correct emoji for each sentiment', () => {
@@ -116,7 +112,6 @@ describe('SummaryDisplay Component', () => {
   
   /**
    * Test complete summary display rendering
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('renders all summary sections', () => {
     render(<SummaryDisplay data={mockSummaryData} />);
@@ -133,7 +128,6 @@ describe('SummaryDisplay Component', () => {
 
   /**
    * Test key points display
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('renders key discussion points', () => {
     render(<SummaryDisplay data={mockSummaryData} />);
@@ -145,7 +139,6 @@ describe('SummaryDisplay Component', () => {
 
   /**
    * Test contributors display with proper formatting
-   * **Validates: Requirements 3.3, 11.1, 11.2**
    */
   test('renders contributors with @username format', () => {
     render(<SummaryDisplay data={mockSummaryData} />);
@@ -156,7 +149,6 @@ describe('SummaryDisplay Component', () => {
 
   /**
    * Test sentiment display with emoji and text
-   * **Validates: Requirements 4.2, 11.1, 11.2**
    */
   test('renders sentiment with emoji and text label', () => {
     render(<SummaryDisplay data={mockSummaryData} />);
@@ -168,7 +160,6 @@ describe('SummaryDisplay Component', () => {
 
   /**
    * Test health score display
-   * **Validates: Requirements 5.2, 11.1, 11.2**
    */
   test('renders health score with label', () => {
     render(<SummaryDisplay data={mockSummaryData} />);
@@ -180,7 +171,6 @@ describe('SummaryDisplay Component', () => {
 
   /**
    * Test text-based layout structure
-   * **Validates: Requirements 11.2, 11.3**
    */
   test('uses text-based layout without complex visuals', () => {
     const { container } = render(<SummaryDisplay data={mockSummaryData} />);
@@ -202,7 +192,6 @@ describe('SummaryDisplay Component', () => {
 
   /**
    * Test different sentiment types
-   * **Validates: Requirements 4.2**
    */
   test('renders different sentiment types correctly', () => {
     const sentiments = ['Positive', 'Neutral', 'Mixed', 'Negative'] as const;
@@ -226,7 +215,6 @@ describe('LoadingDisplay Component', () => {
   
   /**
    * Test loading display with default message
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('renders default loading message', () => {
     render(<LoadingDisplay />);
@@ -235,7 +223,6 @@ describe('LoadingDisplay Component', () => {
 
   /**
    * Test loading display with custom message
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('renders custom loading message', () => {
     const customMessage = 'Processing your request...';
@@ -248,7 +235,6 @@ describe('ErrorDisplay Component', () => {
   
   /**
    * Test error display rendering
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('renders error message', () => {
     const errorMessage = 'Something went wrong';
@@ -260,7 +246,6 @@ describe('ErrorDisplay Component', () => {
 
   /**
    * Test error display styling
-   * **Validates: Requirements 11.1, 11.2**
    */
   test('applies error styling classes', () => {
     const { container } = render(<ErrorDisplay error="Test error" />);

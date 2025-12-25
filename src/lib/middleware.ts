@@ -67,7 +67,6 @@ const rateLimitStore = new RateLimitStore();
 export class InputValidator {
   /**
    * Validate and sanitize thread ID
-   * Requirements: 8.1, 8.2
    */
   static validateThreadId(threadId: unknown): { isValid: boolean; sanitized?: string; error?: string } {
     // Check if threadId exists
@@ -103,7 +102,6 @@ export class InputValidator {
 
   /**
    * Check for potentially malicious patterns in input
-   * Requirements: 8.1, 8.2
    */
   private static containsMaliciousPatterns(input: string): boolean {
     // Check for common injection patterns
@@ -123,7 +121,6 @@ export class InputValidator {
 
   /**
    * Validate request body structure
-   * Requirements: 8.1, 8.2
    */
   static validateRequestBody(body: unknown): { isValid: boolean; error?: string } {
     // Check if body exists
@@ -165,7 +162,6 @@ export class InputValidator {
 
 /**
  * Rate limiting middleware
- * Requirements: 8.2
  */
 export class RateLimiter {
   private config: RateLimitConfig;
@@ -176,7 +172,6 @@ export class RateLimiter {
 
   /**
    * Check if request should be rate limited
-   * Requirements: 8.2
    */
   checkRateLimit(request: NextRequest): { allowed: boolean; resetTime?: number; remaining?: number } {
     // Get client identifier (IP address with fallbacks)
@@ -231,12 +226,10 @@ export class RateLimiter {
 
 /**
  * Security headers middleware
- * Requirements: 8.1, 8.2
  */
 export class SecurityHeaders {
   /**
    * Add security headers to response
-   * Requirements: 8.1, 8.2
    */
   static addSecurityHeaders(response: NextResponse): NextResponse {
     // Prevent API keys from being exposed to client
@@ -262,7 +255,6 @@ export class SecurityHeaders {
 
 /**
  * Combined middleware for API routes
- * Requirements: 8.1, 8.2
  */
 export class APIMiddleware {
   private rateLimiter: RateLimiter;
@@ -273,7 +265,6 @@ export class APIMiddleware {
 
   /**
    * Apply all security and validation middleware
-   * Requirements: 8.1, 8.2
    */
   async apply(
     request: NextRequest,

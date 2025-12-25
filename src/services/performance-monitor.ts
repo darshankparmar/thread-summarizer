@@ -33,7 +33,6 @@ export interface PerformanceStats {
 
 /**
  * Performance monitoring service for tracking response times and optimization
- * Implements requirements 1.4, 6.1, 6.2
  */
 export class PerformanceMonitor {
   private metrics: PerformanceMetrics[] = [];
@@ -42,7 +41,6 @@ export class PerformanceMonitor {
 
   /**
    * Start tracking a new request
-   * Requirement 6.1, 6.2
    */
   startRequest(threadId: string): string {
     const requestId = `req_${++this.requestCounter}_${Date.now()}`;
@@ -66,7 +64,6 @@ export class PerformanceMonitor {
 
   /**
    * Mark request as cache hit
-   * Requirement 1.4, 6.2
    */
   markCacheHit(requestId: string, cacheKey: string): void {
     const metric = this.findMetric(requestId);
@@ -78,7 +75,6 @@ export class PerformanceMonitor {
 
   /**
    * Record AI processing time
-   * Requirement 6.1
    */
   recordAIProcessingTime(requestId: string, processingTime: number): void {
     const metric = this.findMetric(requestId);
@@ -89,7 +85,6 @@ export class PerformanceMonitor {
 
   /**
    * Record API request time (for Foru.ms API calls)
-   * Requirement 6.1
    */
   recordApiRequestTime(requestId: string, apiTime: number): void {
     const metric = this.findMetric(requestId);
@@ -100,7 +95,6 @@ export class PerformanceMonitor {
 
   /**
    * Complete request tracking and calculate total response time
-   * Requirement 1.4, 6.1, 6.2
    */
   completeRequest(requestId: string, error?: string): PerformanceMetrics | null {
     const metric = this.findMetric(requestId);
@@ -124,7 +118,6 @@ export class PerformanceMonitor {
 
   /**
    * Get current performance statistics
-   * Requirement 6.1, 6.2
    */
   getStats(): PerformanceStats {
     const completedMetrics = this.metrics.filter(m => m.duration !== undefined);
@@ -169,7 +162,6 @@ export class PerformanceMonitor {
 
   /**
    * Check if cached response meets performance requirements (< 100ms)
-   * Requirement 6.2
    */
   isCachedResponseFast(responseTime: number): boolean {
     return responseTime < 100; // 100ms requirement
@@ -177,7 +169,6 @@ export class PerformanceMonitor {
 
   /**
    * Check if uncached response meets performance requirements (< 3000ms)
-   * Requirement 6.1
    */
   isUncachedResponseFast(responseTime: number): boolean {
     return responseTime < 3000; // 3 second requirement
@@ -195,7 +186,6 @@ export class PerformanceMonitor {
 
   /**
    * Get cache hit/miss logging for debugging
-   * Requirement 6.2
    */
   getCacheAnalysis(): {
     recentCacheHits: PerformanceMetrics[];

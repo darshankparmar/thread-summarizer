@@ -32,9 +32,7 @@ describe('AI Service Property Tests', () => {
   });
 
   /**
-   * Property 11: Structured Output Completeness - Edge Cases
-   * Feature: thread-summarizer, Property 11: For any AI processing result, all required fields should be present with valid data types
-   * Validates: Requirements 10.1, 10.2, 10.3, 10.4
+   * Property: Structured Output Completeness - Edge Cases
    */
   test('Property 11: Structured Output Completeness - Edge Cases', async () => {
     // Test empty thread case
@@ -59,9 +57,8 @@ describe('AI Service Property Tests', () => {
   });
 
   /**
-   * Property 1: Summary Format Constraints - Edge Cases
-   * Feature: thread-summarizer, Property 1: For any thread analysis request, the generated summary should contain 5 or fewer bullet points in the correct format
-   * Validates: Requirements 1.1
+   * Property: Summary Format Constraints - Edge Cases
+   * Feature: thread-summarizer, Property: For any thread analysis request, the generated summary should contain 5 or fewer bullet points in the correct format
    */
   test('Property 1: Summary Format Constraints - Edge Cases', async () => {
     // Test with edge case data
@@ -91,9 +88,8 @@ describe('AI Service Property Tests', () => {
   });
 
   /**
-   * Property 4: Viewpoint Extraction Bounds - Fallback Behavior
-   * Feature: thread-summarizer, Property 4: For any thread with sufficient content, the system should extract between 3 and 5 unique viewpoints
-   * Validates: Requirements 2.1, 2.4
+   * Property: Viewpoint Extraction Bounds - Fallback Behavior
+   * Feature: thread-summarizer, Property: For any thread with sufficient content, the system should extract between 3 and 5 unique viewpoints
    */
   test('Property 4: Viewpoint Extraction Bounds - Fallback Behavior', async () => {
     const thread = createMockThread();
@@ -119,9 +115,8 @@ describe('AI Service Property Tests', () => {
   });
 
   /**
-   * Property 5: Contributor Identification Bounds - Fallback Behavior
-   * Feature: thread-summarizer, Property 5: For any thread analysis, the system should identify between 2 and 4 key contributors
-   * Validates: Requirements 3.1, 3.4
+   * Property: Contributor Identification Bounds - Fallback Behavior
+   * Feature: thread-summarizer, Property: For any thread analysis, the system should identify between 2 and 4 key contributors
    */
   test('Property 5: Contributor Identification Bounds - Fallback Behavior', async () => {
     const thread = createMockThread();
@@ -149,9 +144,8 @@ describe('AI Service Property Tests', () => {
   });
 
   /**
-   * Property 7: Sentiment Enumeration Constraint
-   * Feature: thread-summarizer, Property 7: For any thread analysis, the sentiment classification should be exactly one of the allowed values
-   * Validates: Requirements 4.1
+   * Property: Sentiment Enumeration Constraint
+   * Feature: thread-summarizer, Property: For any thread analysis, the sentiment classification should be exactly one of the allowed values
    */
   test('Property 7: Sentiment Enumeration Constraint', async () => {
     const thread = createMockThread();
@@ -172,9 +166,8 @@ describe('AI Service Property Tests', () => {
   });
 
   /**
-   * Property 9: Health Score Range Validation
-   * Feature: thread-summarizer, Property 9: For any thread analysis, the health score should be an integer between 1 and 10 inclusive, with appropriate labels
-   * Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5
+   * Property: Health Score Range Validation
+   * Feature: thread-summarizer, Property: For any thread analysis, the health score should be an integer between 1 and 10 inclusive, with appropriate labels
    */
   test('Property 9: Health Score Range Validation', async () => {
     const thread = createMockThread();

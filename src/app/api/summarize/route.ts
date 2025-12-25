@@ -9,8 +9,6 @@ import { apiMiddleware, InputValidator } from '@/lib/middleware';
 /**
  * POST /api/summarize
  * Generate AI-powered summary for a forum thread
- * 
- * Requirements: 1.1, 1.3, 1.4, 1.5
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Apply security and validation middleware
@@ -72,7 +70,7 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
 
     const { thread, posts, lastPostTimestamp } = threadResult.data;
 
-    // Step 2: Check cache first (Requirement 1.4)
+    // Step 2: Check cache first
     const cacheKey = `summary_${sanitizedThreadId}_${lastPostTimestamp}`;
     const cachedEntry = cacheManager.get(sanitizedThreadId, lastPostTimestamp);
     
@@ -98,7 +96,7 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
 
     // Step 3: Check if thread is suitable for AI analysis
     if (!threadFetcher.isSuitableForAnalysis(threadResult.data)) {
-      // Return fallback for insufficient content (Requirement 7.1)
+      // Return fallback for insufficient content
       const fallbackData = {
         summary: ["Thread has insufficient content for analysis"],
         keyPoints: ["No meaningful discussion content available"],
@@ -129,7 +127,7 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
       });
     }
 
-    // Step 4: Generate AI summary (Requirement 1.1)
+    // Step 4: Generate AI summary
     const aiStartTime = Date.now();
     const aiResult = await aiService.generateSummary(thread, posts);
     const aiProcessingTime = Date.now() - aiStartTime;
@@ -137,7 +135,7 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
     performanceMonitor.recordAIProcessingTime(requestId, aiProcessingTime);
     
     if (!aiResult.success || !aiResult.data) {
-      // Handle AI processing errors (Requirement 7.2)
+      // Handle AI processing errors
       const responseTime = Date.now() - startTime;
       performanceMonitor.completeRequest(requestId, aiResult.error);
 
@@ -156,14 +154,14 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
       });
     }
 
-    // Step 5: Cache the successful result (Requirement 1.3)
+    // Step 5: Cache the successful result
     cacheManager.set(sanitizedThreadId, lastPostTimestamp, aiResult.data);
 
     // Step 6: Record performance metrics
     const responseTime = Date.now() - startTime;
     performanceMonitor.completeRequest(requestId);
 
-    // Ensure response time meets requirements (Requirement 6.1)
+    // Ensure response time meets requirements
     if (responseTime > 3000) {
       console.warn(`Summary generation took ${responseTime}ms, exceeding 3s requirement for thread ${sanitizedThreadId}`);
     }
