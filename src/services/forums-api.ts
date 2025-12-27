@@ -1,5 +1,4 @@
 import { ForumsThread, ForumsPost } from '@/types';
-import { demoApiService } from './demo-api';
 
 /**
  * Configuration for Foru.ms API client
@@ -34,6 +33,108 @@ export class ForumsApiClient {
   }
 
   /**
+   * Common method to make API requests with consistent error handling
+   * @private
+   */
+  private async makeApiRequest(endpoint: string, timeout: number = 10000): Promise<unknown> {
+    const response = await fetch(`${this.config.baseUrl}${endpoint}`, {
+      method: 'GET',
+      headers: {
+        'x-api-key': this.config.apiKey,
+        'Content-Type': 'application/json',
+        'User-Agent': 'ThreadSummarizer/1.0'
+      },
+      signal: AbortSignal.timeout(timeout)
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new ForumsApiError('Authentication failed - invalid API key', 401);
+      }
+      if (response.status === 404) {
+        throw new ForumsApiError(`Resource not found: ${endpoint}`, 404);
+      }
+      if (response.status === 429) {
+        throw new ForumsApiError('Rate limit exceeded - please try again later', 429);
+      }
+      throw new ForumsApiError(
+        `API request failed with status ${response.status}`,
+        response.status
+      );
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Fetch a list of threads from Foru.ms API
+   * @param options - Optional query parameters for filtering and pagination
+   * @returns Promise<ForumsThread[]> - Array of threads
+   * @throws ForumsApiError - When API request fails
+   */
+  async fetchThreads(options: {
+    limit?: number;
+    cursor?: string;
+    query?: string;
+    tagId?: string;
+    filter?: string;
+    type?: string;
+    userId?: string;
+  } = {}): Promise<{ threads: ForumsThread[]; count: number; nextCursor?: string }> {
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (options.limit) params.append('limit', options.limit.toString());
+      if (options.cursor) params.append('cursor', options.cursor);
+      if (options.query) params.append('query', options.query);
+      if (options.tagId) params.append('tagId', options.tagId);
+      if (options.filter) params.append('filter', options.filter);
+      if (options.type) params.append('type', options.type);
+      if (options.userId) params.append('userId', options.userId);
+
+      const queryString = params.toString();
+      const endpoint = `/api/v1/threads${queryString ? `?${queryString}` : ''}`;
+      
+      const data = await this.makeApiRequest(endpoint);
+      
+      // Type guard for the response data
+      const responseData = data as { threads?: ForumsThread[]; count?: number; nextThreadCursor?: string } | ForumsThread[];
+      
+      // Handle both array response and paginated response
+      const threads = Array.isArray(responseData) ? responseData : responseData.threads || [];
+      const count = Array.isArray(responseData) ? responseData.length : responseData.count || threads.length;
+      const nextCursor = Array.isArray(responseData) ? undefined : responseData.nextThreadCursor;
+      
+      // Validate each thread structure
+      if (!Array.isArray(threads) || !threads.every(thread => this.isValidThread(thread))) {
+        throw new ForumsApiError('Invalid thread data received from API');
+      }
+
+      return { 
+        threads: threads as ForumsThread[], 
+        count,
+        nextCursor 
+      };
+    } catch (error) {
+      if (error instanceof ForumsApiError) {
+        throw error;
+      }
+      
+      // Handle network errors (including generic TypeError)
+      if (error instanceof TypeError) {
+        throw new ForumsApiError('Network error - unable to connect to Foru.ms API', undefined, error as Error);
+      }
+      
+      // Handle timeout errors
+      if (error instanceof DOMException && error.name === 'TimeoutError') {
+        throw new ForumsApiError('Request timeout - Foru.ms API did not respond in time', undefined, error as Error);
+      }
+      
+      throw new ForumsApiError('Unexpected error occurred', undefined, error as Error);
+    }
+  }
+
+  /**
    * Fetch thread metadata from Foru.ms API
    * @param threadId - The ID of the thread to fetch
    * @returns Promise<ForumsThread> - Thread metadata
@@ -44,44 +145,8 @@ export class ForumsApiClient {
       throw new ForumsApiError('Thread ID is required');
     }
 
-    // Use demo data if demo mode is enabled
-    if (demoApiService.isDemoMode()) {
-      try {
-        return await demoApiService.fetchThread(threadId);
-      } catch {
-        throw new ForumsApiError(`Demo thread not found: ${threadId}`, 404);
-      }
-    }
-
     try {
-      const response = await fetch(`${this.config.baseUrl}/api/v1/thread/${threadId}`, {
-        method: 'GET',
-        headers: {
-          'x-api-key': this.config.apiKey,
-          'Content-Type': 'application/json',
-          'User-Agent': 'ThreadSummarizer/1.0'
-        },
-        // Add timeout to prevent hanging requests
-        signal: AbortSignal.timeout(10000) // 10 second timeout
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new ForumsApiError('Authentication failed - invalid API key', 401);
-        }
-        if (response.status === 404) {
-          throw new ForumsApiError(`Thread with ID ${threadId} not found`, 404);
-        }
-        if (response.status === 429) {
-          throw new ForumsApiError('Rate limit exceeded - please try again later', 429);
-        }
-        throw new ForumsApiError(
-          `API request failed with status ${response.status}`,
-          response.status
-        );
-      }
-
-      const data = await response.json();
+      const data = await this.makeApiRequest(`/api/v1/thread/${threadId}`);
       
       // Validate response structure
       if (!this.isValidThread(data)) {
@@ -91,6 +156,10 @@ export class ForumsApiClient {
       return data as ForumsThread;
     } catch (error) {
       if (error instanceof ForumsApiError) {
+        // Customize 404 error message for thread endpoint
+        if (error.statusCode === 404) {
+          throw new ForumsApiError(`Thread with ID ${threadId} not found`, 404);
+        }
         throw error;
       }
       
@@ -119,46 +188,14 @@ export class ForumsApiClient {
       throw new ForumsApiError('Thread ID is required');
     }
 
-    // Use demo data if demo mode is enabled
-    if (demoApiService.isDemoMode()) {
-      try {
-        return await demoApiService.fetchThreadPosts(threadId);
-      } catch {
-        throw new ForumsApiError(`Demo posts not found for thread: ${threadId}`, 404);
-      }
-    }
-
     try {
-      const response = await fetch(`${this.config.baseUrl}/api/v1/thread/${threadId}/posts`, {
-        method: 'GET',
-        headers: {
-          'x-api-key': this.config.apiKey,
-          'Content-Type': 'application/json',
-          'User-Agent': 'ThreadSummarizer/1.0'
-        },
-        signal: AbortSignal.timeout(15000) // 15 second timeout for posts (potentially larger response)
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new ForumsApiError('Authentication failed - invalid API key', 401);
-        }
-        if (response.status === 404) {
-          throw new ForumsApiError(`Posts for thread ${threadId} not found`, 404);
-        }
-        if (response.status === 429) {
-          throw new ForumsApiError('Rate limit exceeded - please try again later', 429);
-        }
-        throw new ForumsApiError(
-          `API request failed with status ${response.status}`,
-          response.status
-        );
-      }
-
-      const data = await response.json();
+      const data = await this.makeApiRequest(`/api/v1/thread/${threadId}/posts`, 15000);
+      
+      // Type guard for the response data
+      const responseData = data as { posts?: ForumsPost[] } | ForumsPost[];
       
       // Handle both array response and paginated response
-      const posts = Array.isArray(data) ? data : data.posts || [];
+      const posts = Array.isArray(responseData) ? responseData : responseData.posts || [];
       
       // Validate each post structure
       if (!Array.isArray(posts) || !posts.every(post => this.isValidPost(post))) {
@@ -168,6 +205,10 @@ export class ForumsApiClient {
       return posts as ForumsPost[];
     } catch (error) {
       if (error instanceof ForumsApiError) {
+        // Customize 404 error message for posts endpoint
+        if (error.statusCode === 404) {
+          throw new ForumsApiError(`Posts for thread ${threadId} not found`, 404);
+        }
         throw error;
       }
       
@@ -192,15 +233,6 @@ export class ForumsApiClient {
    * @throws ForumsApiError - When any API request fails
    */
   async fetchCompleteThread(threadId: string): Promise<{thread: ForumsThread, posts: ForumsPost[]}> {
-    // Use demo data if demo mode is enabled
-    if (demoApiService.isDemoMode()) {
-      try {
-        return await demoApiService.fetchCompleteThread(threadId);
-      } catch {
-        throw new ForumsApiError(`Demo thread not found: ${threadId}`, 404);
-      }
-    }
-
     try {
       // Fetch thread and posts concurrently for better performance
       const [thread, posts] = await Promise.all([

@@ -108,7 +108,7 @@ export class ErrorHandlerService {
                 suggestions: [
                     `Wait ${retryAfter} seconds before trying again`,
                     'Try again during off-peak hours',
-                    'Consider using demo mode for testing'
+                    'Check if the service is available'
                 ],
                 technicalDetails
             };
@@ -152,8 +152,8 @@ export class ErrorHandlerService {
                 retryable: false,
                 suggestions: [
                     'Contact the administrator to configure API access',
-                    'Try using demo mode instead',
-                    'Check if the forum service is available'
+                    'Check if the forum service is available',
+                    'Verify the API credentials are correct'
                 ],
                 technicalDetails
             };
@@ -244,7 +244,7 @@ export class ErrorHandlerService {
                 suggestions: [
                     'Wait a few minutes and try again',
                     'Check if the forum service is operational',
-                    'Try using demo mode for testing'
+                    'Contact support if the issue persists'
                 ],
                 technicalDetails
             };

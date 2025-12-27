@@ -7,7 +7,7 @@ AI-powered forum thread analysis tool for Foru.ms.
 ### Prerequisites
 - Node.js 18+ and npm
 - OpenAI API key (for AI summarization)
-- Foru.ms API key (demo mode also available)
+- Foru.ms API key (required for live data)
 
 ### Quick Start
 
@@ -26,11 +26,8 @@ AI-powered forum thread analysis tool for Foru.ms.
    # Required for AI summarization
    OPENAI_API_KEY=your_openai_key_here
    
-   # Optional - if missing, demo mode auto-enables
+   # Required for accessing Foru.ms API
    FORUMS_API_KEY=your_forums_key_here
-   
-   # Optional - force demo mode even with API key
-   DEMO_MODE=true
    ```
 
 4. **Start development server**
@@ -40,21 +37,7 @@ AI-powered forum thread analysis tool for Foru.ms.
 
 5. **Open http://localhost:3000**
 
-### Demo Mode
-
-Demo mode provides sample thread data for development and presentations:
-
-- **Auto-enabled** when `FORUMS_API_KEY` is missing
-- **Force-enabled** by setting `DEMO_MODE=true`
-- **5 demo threads** covering edge cases and different scenarios
-- **Simulated API latency** for realistic testing
-
-### Available Demo Threads
-- Empty thread (edge case testing)
-- Single post thread (minimal content)
-- Heated debate (sentiment analysis)
-- Constructive discussion (healthy scoring)
-- Technical problem-solving (complex analysis)
+The landing page will load available threads from Foru.ms automatically.
 
 ## Testing
 
@@ -66,6 +49,7 @@ npm test
 
 - Next.js 14 + TypeScript
 - OpenAI API
+- Foru.ms API integration
 - Jest + fast-check for testing
 
 ## Development Notes
@@ -73,3 +57,4 @@ npm test
 - Following spec-driven development
 - Property-based testing for correctness
 - All AI processing server-side only
+- Real-time thread data from Foru.ms
