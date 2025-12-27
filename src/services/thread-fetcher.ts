@@ -206,7 +206,7 @@ export class ThreadFetcherService {
     formatted += `Posts (${posts.length} total):\n`;
 
     posts.forEach((post, index) => {
-      formatted += `\n${index + 1}. @${post.user.username}: ${post.body}`;
+      formatted += `\n${index + 1}. @${post.user?.username || 'Unknown User'}: ${post.body}`;
     });
 
     return formatted;

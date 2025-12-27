@@ -4,6 +4,10 @@ import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { ForumsThread, ForumsPost } from '@/types';
 import ThreadSummaryPanel from '@/components/ThreadSummaryPanel';
+import Avatar from '@/components/Avatar';
+import ThreadTags from '@/components/ThreadTags';
+import ThreadStatus from '@/components/ThreadStatus';
+import PostEngagement from '@/components/PostEngagement';
 
 interface ThreadPageState {
   thread: ForumsThread | null;
@@ -205,18 +209,41 @@ export default function ThreadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Thread Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{thread.title}</h1>
-          <div className="flex items-center text-sm text-gray-500 mb-4">
-            <span>Started by @{thread.user.username}</span>
-            <span className="mx-2">•</span>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+          {/* Thread Status Indicators */}
+          <ThreadStatus pinned={thread.pinned} locked={thread.locked} className="mb-3" />
+
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{thread.title}</h1>
+          
+          {/* Thread Tags */}
+          <ThreadTags tags={thread.tags || []} className="mb-4" />
+
+          {/* Thread Author Info with Avatar */}
+          <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 mb-4 gap-2 sm:gap-0">
+            <div className="flex items-center">
+              <Avatar 
+                src={thread.user.avatar} 
+                username={thread.user.username} 
+                size="sm" 
+                className="mr-2" 
+              />
+              <span>Started by @{thread.user.username}</span>
+            </div>
+            <span className="hidden sm:inline mx-2">•</span>
             <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
-            <span className="mx-2">•</span>
+            {thread.updatedAt && thread.updatedAt !== thread.createdAt && (
+              <>
+                <span className="hidden sm:inline mx-2">•</span>
+                <span className="text-gray-400">Updated {new Date(thread.updatedAt).toLocaleDateString()}</span>
+              </>
+            )}
+            <span className="hidden sm:inline mx-2">•</span>
             <span>{posts.length} {posts.length === 1 ? 'reply' : 'replies'}</span>
           </div>
+          
           <div className="prose max-w-none">
             <p className="text-gray-700 whitespace-pre-wrap">{thread.body}</p>
           </div>
@@ -231,19 +258,72 @@ export default function ThreadPage() {
         {/* Thread Posts */}
         <div className="space-y-4">
           {posts.map((post, index) => (
-            <div key={post.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="font-medium text-gray-900">@{post.user.username}</span>
-                  <span className="mx-2">•</span>
-                  <span>Reply #{index + 1}</span>
-                  <span className="mx-2">•</span>
-                  <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+            <div 
+              key={post.id} 
+              className={`bg-white rounded-lg shadow-sm border p-4 sm:p-6 ${
+                post.bestAnswer 
+                  ? 'border-green-200 bg-green-50' 
+                  : 'border-gray-200'
+              }`}
+            >
+              {/* Best Answer Badge */}
+              {post.bestAnswer && (
+                <div className="flex items-center mb-3">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Best Answer
+                  </span>
                 </div>
+              )}
+
+              {/* Post Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
+                <div className="flex items-center text-sm text-gray-500">
+                  {/* User Avatar and Info */}
+                  <div className="flex items-center">
+                    <Avatar 
+                      src={post.user?.avatar} 
+                      username={post.user?.username || 'Unknown User'} 
+                      size="md" 
+                      className="mr-3" 
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-900">@{post.user?.username || 'Unknown User'}</span>
+                      <div className="flex items-center text-xs text-gray-400">
+                        <span>Reply #{index + 1}</span>
+                        <span className="mx-1">•</span>
+                        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                        {post.updatedAt && post.updatedAt !== post.createdAt && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span className="italic">edited</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Post Engagement */}
+                <PostEngagement likes={post.likes} upvotes={post.upvotes} />
               </div>
+
+              {/* Post Content */}
               <div className="prose max-w-none">
                 <p className="text-gray-700 whitespace-pre-wrap">{post.body}</p>
               </div>
+
+              {/* Nested Replies Indicator */}
+              {post.parentId && (
+                <div className="mt-3 text-xs text-gray-500 italic">
+                  <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0L3 11.414V13a1 1 0 11-2 0V9a1 1 0 011-1h4a1 1 0 110 2H4.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                  </svg>
+                  Reply to previous post
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -13,13 +13,24 @@ export const timestampArbitrary = fc.date({ min: new Date('2020-01-01'), max: ne
 export const forumsThreadArbitrary: fc.Arbitrary<ForumsThread> = fc.record({
   id: threadIdArbitrary,
   title: fc.string({ minLength: 1, maxLength: 200 }),
+  slug: fc.option(fc.string({ minLength: 1, maxLength: 200 })),
   body: fc.string({ minLength: 1, maxLength: 5000 }),
+  locked: fc.option(fc.boolean()),
+  pinned: fc.option(fc.boolean()),
   createdAt: timestampArbitrary,
   updatedAt: timestampArbitrary,
   user: fc.record({
     id: fc.string({ minLength: 1, maxLength: 50 }),
-    username: usernameArbitrary
-  })
+    username: usernameArbitrary,
+    avatar: fc.option(fc.string({ minLength: 1, maxLength: 200 }))
+  }),
+  tags: fc.option(fc.array(fc.record({
+    id: fc.string({ minLength: 1, maxLength: 50 }),
+    name: fc.string({ minLength: 1, maxLength: 100 }),
+    description: fc.option(fc.string({ minLength: 1, maxLength: 500 })),
+    color: fc.option(fc.string({ minLength: 1, maxLength: 20 })),
+    extendedData: fc.option(fc.object())
+  }), { minLength: 0, maxLength: 5 }))
 })
 
 export const forumsPostArbitrary: fc.Arbitrary<ForumsPost> = fc.record({
@@ -27,10 +38,25 @@ export const forumsPostArbitrary: fc.Arbitrary<ForumsPost> = fc.record({
   body: fc.string({ minLength: 1, maxLength: 2000 }),
   threadId: threadIdArbitrary,
   userId: fc.string({ minLength: 1, maxLength: 50 }),
+  parentId: fc.option(fc.string({ minLength: 1, maxLength: 50 })),
+  bestAnswer: fc.option(fc.boolean()),
+  likes: fc.option(fc.array(fc.record({
+    id: fc.string({ minLength: 1, maxLength: 50 }),
+    userId: fc.string({ minLength: 1, maxLength: 50 })
+  }), { minLength: 0, maxLength: 10 })),
+  upvotes: fc.option(fc.array(fc.record({
+    id: fc.string({ minLength: 1, maxLength: 50 }),
+    userId: fc.string({ minLength: 1, maxLength: 50 })
+  }), { minLength: 0, maxLength: 10 })),
+  extendedData: fc.option(fc.object()),
+  instanceId: fc.option(fc.string({ minLength: 1, maxLength: 50 })),
   createdAt: timestampArbitrary,
-  user: fc.record({
-    username: usernameArbitrary
-  })
+  updatedAt: fc.option(timestampArbitrary),
+  user: fc.option(fc.record({
+    username: usernameArbitrary,
+    id: fc.option(fc.string({ minLength: 1, maxLength: 50 })),
+    avatar: fc.option(fc.string({ minLength: 1, maxLength: 200 }))
+  }))
 })
 
 export const sentimentArbitrary: fc.Arbitrary<SentimentType> = fc.constantFrom(

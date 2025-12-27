@@ -9,13 +9,25 @@ import { ForumsThread, ForumsPost } from '@/types';
 export const emptyThread: ForumsThread = {
   id: 'demo-empty-001',
   title: 'Welcome to the Forum!',
+  slug: 'welcome-to-the-forum',
   body: 'This is a new discussion thread. Feel free to share your thoughts!',
+  locked: false,
+  pinned: true,
   createdAt: '2024-01-15T10:00:00Z',
   updatedAt: '2024-01-15T10:00:00Z',
   user: {
     id: 'user-001',
-    username: 'moderator'
-  }
+    username: 'moderator',
+    avatar: 'https://example.com/avatars/moderator.jpg'
+  },
+  tags: [
+    {
+      id: 'tag-welcome',
+      name: 'Welcome',
+      description: 'Welcome and introduction threads',
+      color: '#green'
+    }
+  ]
 };
 
 export const emptyThreadPosts: ForumsPost[] = [];
@@ -24,13 +36,31 @@ export const emptyThreadPosts: ForumsPost[] = [];
 export const singlePostThread: ForumsThread = {
   id: 'demo-single-002',
   title: 'Quick Question About TypeScript',
+  slug: 'quick-question-about-typescript',
   body: 'I\'m having trouble understanding generic constraints in TypeScript. Can someone explain the difference between `T extends string` and `T = string`?',
+  locked: false,
+  pinned: false,
   createdAt: '2024-01-16T09:30:00Z',
   updatedAt: '2024-01-16T11:45:00Z',
   user: {
     id: 'user-002',
-    username: 'typescript_newbie'
-  }
+    username: 'typescript_newbie',
+    avatar: 'https://example.com/avatars/newbie.jpg'
+  },
+  tags: [
+    {
+      id: 'tag-typescript',
+      name: 'TypeScript',
+      description: 'TypeScript related discussions',
+      color: '#blue'
+    },
+    {
+      id: 'tag-question',
+      name: 'Question',
+      description: 'Questions and help requests',
+      color: '#orange'
+    }
+  ]
 };
 
 export const singlePostThreadPosts: ForumsPost[] = [
@@ -39,9 +69,23 @@ export const singlePostThreadPosts: ForumsPost[] = [
     body: 'Great question! `T extends string` means T must be a subtype of string (like string literals), while `T = string` sets a default type. The extends keyword creates a constraint, while = provides a default value when no type is specified.',
     threadId: 'demo-single-002',
     userId: 'user-003',
+    parentId: undefined,
+    bestAnswer: true,
+    likes: [
+      { id: 'like-001', userId: 'user-002' },
+      { id: 'like-002', userId: 'user-004' }
+    ],
+    upvotes: [
+      { id: 'upvote-001', userId: 'user-002' }
+    ],
+    extendedData: {},
+    instanceId: 'instance-1',
     createdAt: '2024-01-16T11:45:00Z',
+    updatedAt: '2024-01-16T11:45:00Z',
     user: {
-      username: 'ts_expert'
+      username: 'ts_expert',
+      id: 'user-003',
+      avatar: 'https://example.com/avatars/expert.jpg'
     }
   }
 ];
@@ -50,13 +94,31 @@ export const singlePostThreadPosts: ForumsPost[] = [
 export const heatedDiscussionThread: ForumsThread = {
   id: 'demo-heated-003',
   title: 'Should We Use Microservices or Monoliths?',
+  slug: 'microservices-vs-monoliths-debate',
   body: 'Our team is debating architecture for our new project. Some want microservices for scalability, others prefer monoliths for simplicity. What are your thoughts on the trade-offs?',
+  locked: false,
+  pinned: false,
   createdAt: '2024-01-17T14:00:00Z',
   updatedAt: '2024-01-17T18:30:00Z',
   user: {
     id: 'user-004',
-    username: 'tech_lead_sarah'
-  }
+    username: 'tech_lead_sarah',
+    avatar: 'https://example.com/avatars/sarah.jpg'
+  },
+  tags: [
+    {
+      id: 'tag-architecture',
+      name: 'Architecture',
+      description: 'Software architecture discussions',
+      color: '#purple'
+    },
+    {
+      id: 'tag-debate',
+      name: 'Debate',
+      description: 'Heated discussions and debates',
+      color: '#red'
+    }
+  ]
 };
 
 export const heatedDiscussionPosts: ForumsPost[] = [
@@ -65,9 +127,18 @@ export const heatedDiscussionPosts: ForumsPost[] = [
     body: 'Microservices are the way to go! They provide better scalability, fault isolation, and technology diversity. Each service can be developed and deployed independently.',
     threadId: 'demo-heated-003',
     userId: 'user-005',
+    parentId: undefined,
+    bestAnswer: false,
+    likes: [{ id: 'like-003', userId: 'user-007' }],
+    upvotes: [{ id: 'upvote-002', userId: 'user-007' }],
+    extendedData: {},
+    instanceId: 'instance-1',
     createdAt: '2024-01-17T14:15:00Z',
+    updatedAt: '2024-01-17T14:15:00Z',
     user: {
-      username: 'microservices_advocate'
+      username: 'microservices_advocate',
+      id: 'user-005',
+      avatar: 'https://example.com/avatars/advocate.jpg'
     }
   },
   {
@@ -75,9 +146,24 @@ export const heatedDiscussionPosts: ForumsPost[] = [
     body: 'I disagree. Microservices add unnecessary complexity for most projects. Network latency, distributed debugging, and data consistency become major headaches. Start with a monolith and split later if needed.',
     threadId: 'demo-heated-003',
     userId: 'user-006',
+    parentId: undefined,
+    bestAnswer: false,
+    likes: [
+      { id: 'like-004', userId: 'user-008' },
+      { id: 'like-005', userId: 'user-004' }
+    ],
+    upvotes: [
+      { id: 'upvote-003', userId: 'user-008' },
+      { id: 'upvote-004', userId: 'user-004' }
+    ],
+    extendedData: {},
+    instanceId: 'instance-1',
     createdAt: '2024-01-17T14:30:00Z',
+    updatedAt: '2024-01-17T14:30:00Z',
     user: {
-      username: 'monolith_defender'
+      username: 'monolith_defender',
+      id: 'user-006',
+      avatar: 'https://example.com/avatars/defender.jpg'
     }
   },
   {

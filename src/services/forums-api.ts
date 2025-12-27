@@ -54,10 +54,10 @@ export class ForumsApiClient {
     }
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/threads/${threadId}`, {
+      const response = await fetch(`${this.config.baseUrl}/api/v1/thread/${threadId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          'x-api-key': this.config.apiKey,
           'Content-Type': 'application/json',
           'User-Agent': 'ThreadSummarizer/1.0'
         },
@@ -129,10 +129,10 @@ export class ForumsApiClient {
     }
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/threads/${threadId}/posts`, {
+      const response = await fetch(`${this.config.baseUrl}/api/v1/thread/${threadId}/posts`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          'x-api-key': this.config.apiKey,
           'Content-Type': 'application/json',
           'User-Agent': 'ThreadSummarizer/1.0'
         },
@@ -252,10 +252,9 @@ export class ForumsApiClient {
       typeof post.body === 'string' &&
       typeof post.threadId === 'string' &&
       typeof post.userId === 'string' &&
-      typeof post.createdAt === 'string' &&
-      post.user !== null &&
-      typeof post.user === 'object' &&
-      typeof (post.user as Record<string, unknown>).username === 'string'
+      typeof post.createdAt === 'string'
+      // Note: user object is optional in posts, so we don't validate it as required
+      // likes, upvotes, and other fields are also optional
     );
   }
 }

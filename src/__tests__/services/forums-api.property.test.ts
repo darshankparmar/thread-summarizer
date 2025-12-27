@@ -54,11 +54,12 @@ describe('Forums API Integration Property Tests', () => {
 
             // Verify API was called with correct parameters
             expect(global.fetch).toHaveBeenCalledWith(
-              `https://test-api.foru.ms/threads/${threadId}`,
+              `https://test-api.foru.ms/api/v1/thread/${threadId}`,
               expect.objectContaining({
                 method: 'GET',
                 headers: expect.objectContaining({
-                  'Authorization': 'Bearer test-api-key',
+                  'x-api-key': 'test-api-key',
+                  
                   'Content-Type': 'application/json',
                   'User-Agent': 'ThreadSummarizer/1.0'
                 })
@@ -104,17 +105,19 @@ describe('Forums API Integration Property Tests', () => {
               expect(post).toHaveProperty('threadId', threadId);
               expect(post).toHaveProperty('userId');
               expect(post).toHaveProperty('createdAt');
-              expect(post).toHaveProperty('user');
-              expect(post.user).toHaveProperty('username');
+              // Note: user field is now optional in the updated types
+              if (post.user) {
+                expect(post.user).toHaveProperty('username');
+              }
             });
 
             // Verify API was called with correct parameters
             expect(global.fetch).toHaveBeenCalledWith(
-              `https://test-api.foru.ms/threads/${threadId}/posts`,
+              `https://test-api.foru.ms/api/v1/thread/${threadId}/posts`,
               expect.objectContaining({
                 method: 'GET',
                 headers: expect.objectContaining({
-                  'Authorization': 'Bearer test-api-key',
+                  'x-api-key': 'test-api-key',
                   'Content-Type': 'application/json',
                   'User-Agent': 'ThreadSummarizer/1.0'
                 })
@@ -175,24 +178,27 @@ describe('Forums API Integration Property Tests', () => {
               expect(post).toHaveProperty('body');
               expect(post).toHaveProperty('userId');
               expect(post).toHaveProperty('createdAt');
-              expect(post).toHaveProperty('user');
+              // Note: user field is now optional in the updated types
+              if (post.user) {
+                expect(post.user).toHaveProperty('username');
+              }
             });
 
             // Verify both API calls were made with proper authentication
             expect(global.fetch).toHaveBeenCalledTimes(2);
             expect(global.fetch).toHaveBeenNthCalledWith(1,
-              `https://test-api.foru.ms/threads/${threadId}`,
+              `https://test-api.foru.ms/api/v1/thread/${threadId}`,
               expect.objectContaining({
                 headers: expect.objectContaining({
-                  'Authorization': 'Bearer test-api-key'
+                  'x-api-key': 'test-api-key'
                 })
               })
             );
             expect(global.fetch).toHaveBeenNthCalledWith(2,
-              `https://test-api.foru.ms/threads/${threadId}/posts`,
+              `https://test-api.foru.ms/api/v1/thread/${threadId}/posts`,
               expect.objectContaining({
                 headers: expect.objectContaining({
-                  'Authorization': 'Bearer test-api-key'
+                  'x-api-key': 'test-api-key'
                 })
               })
             );
@@ -236,7 +242,7 @@ describe('Forums API Integration Property Tests', () => {
               expect.any(String),
               expect.objectContaining({
                 headers: expect.objectContaining({
-                  'Authorization': `Bearer ${apiKey}`
+                  'x-api-key': `${apiKey}`
                 })
               })
             );

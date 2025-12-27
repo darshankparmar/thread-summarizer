@@ -60,7 +60,7 @@ export const createPromptTemplate = (
   // Optimize prompt length for faster processing
   const optimizedPosts = optimizePostsForPrompt(posts);
   const postsText = optimizedPosts
-    .map(post => `@${post.user.username}: ${post.body}`)
+    .map(post => `@${post.user?.username || 'Unknown User'}: ${post.body}`)
     .join('\n\n');
 
   return `
@@ -248,14 +248,14 @@ export class AIService {
 
     // Single or very few posts case
     if (posts.length <= 2) {
-      const contributorCount = new Set(posts.map(p => p.user.username)).size;
+      const contributorCount = new Set(posts.map(p => p.user?.username || 'Unknown User')).size;
       return {
         success: true,
         data: {
           summary: [`Discussion about: ${thread.title}`, `${posts.length} post(s) from ${contributorCount} contributor(s)`],
           keyPoints: [thread.body || "Main topic discussion"],
           contributors: posts.slice(0, 2).map(post => ({
-            username: post.user.username,
+            username: post.user?.username || 'Unknown User',
             contribution: "Participant in discussion"
           })),
           sentiment: "Neutral",
@@ -510,7 +510,7 @@ export class AIService {
     posts: ForumsPost[]
   ): SummaryData {
     const postCount = posts.length;
-    const contributorCount = new Set(posts.map(p => p.user.username)).size;
+    const contributorCount = new Set(posts.map(p => p.user?.username || 'Unknown User')).size;
     const topPosters = this.getTopPosters(posts);
 
     return {
@@ -533,7 +533,7 @@ export class AIService {
     const posterCounts = new Map<string, number>();
     
     posts.forEach(post => {
-      const username = post.user.username;
+      const username = post.user?.username || 'Unknown User';
       posterCounts.set(username, (posterCounts.get(username) || 0) + 1);
     });
 

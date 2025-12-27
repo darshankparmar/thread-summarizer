@@ -1,16 +1,55 @@
 // Core data types for Thread Summarizer
 
 // Foru.ms API Types
+export interface ForumsUser {
+  id: string;
+  username: string;
+  email?: string;
+  displayName?: string;
+  emailVerified?: boolean;
+  image?: string;
+  avatar?: string; // Used in thread user object
+  roles?: string[];
+  bio?: string;
+  signature?: string;
+  url?: string;
+  extendedData?: Record<string, unknown>;
+}
+
+export interface ForumsTag {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  threads?: ForumsThread[];
+  extendedData?: Record<string, unknown>;
+}
+
 export interface ForumsThread {
   id: string;
   title: string;
+  slug?: string;
   body: string;
+  locked?: boolean;
+  pinned?: boolean;
   createdAt: string;
   updatedAt: string;
   user: {
     id: string;
     username: string;
+    avatar?: string;
   };
+  tags?: ForumsTag[];
+}
+
+export interface ForumsLike {
+  id: string;
+  userId: string;
+}
+
+export interface ForumsUpvote {
+  id: string;
+  userId: string;
 }
 
 export interface ForumsPost {
@@ -18,9 +57,18 @@ export interface ForumsPost {
   body: string;
   threadId: string;
   userId: string;
+  parentId?: string;
+  bestAnswer?: boolean;
+  likes?: ForumsLike[];
+  upvotes?: ForumsUpvote[];
+  extendedData?: Record<string, unknown>;
+  instanceId?: string;
   createdAt: string;
-  user: {
+  updatedAt?: string;
+  user?: {
     username: string;
+    id?: string;
+    avatar?: string;
   };
 }
 

@@ -4,13 +4,25 @@ import { ForumsThread, ForumsPost, SummaryData } from '@/types'
 export const createMockThread = (overrides: Partial<ForumsThread> = {}): ForumsThread => ({
   id: 'thread-123',
   title: 'Sample Discussion Thread',
+  slug: 'sample-discussion-thread',
   body: 'This is the main thread content discussing various topics.',
+  locked: false,
+  pinned: false,
   createdAt: '2024-01-01T10:00:00Z',
   updatedAt: '2024-01-01T15:30:00Z',
   user: {
     id: 'user-1',
-    username: 'threadstarter'
+    username: 'threadstarter',
+    avatar: 'https://example.com/avatar1.jpg'
   },
+  tags: [
+    {
+      id: 'tag-1',
+      name: 'Discussion',
+      description: 'General discussion topics',
+      color: '#blue'
+    }
+  ],
   ...overrides
 })
 
@@ -19,9 +31,18 @@ export const createMockPost = (overrides: Partial<ForumsPost> = {}): ForumsPost 
   body: 'This is a sample post response.',
   threadId: 'thread-123',
   userId: 'user-2',
+  parentId: undefined,
+  bestAnswer: false,
+  likes: [],
+  upvotes: [],
+  extendedData: {},
+  instanceId: 'instance-1',
   createdAt: '2024-01-01T11:00:00Z',
+  updatedAt: '2024-01-01T11:05:00Z',
   user: {
-    username: 'responder'
+    username: 'responder',
+    id: 'user-2',
+    avatar: 'https://example.com/avatar2.jpg'
   },
   ...overrides
 })
