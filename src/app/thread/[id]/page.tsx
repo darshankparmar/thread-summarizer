@@ -210,53 +210,80 @@ export default function ThreadPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Thread Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
-          {/* Thread Status Indicators */}
-          <ThreadStatus pinned={thread.pinned} locked={thread.locked} className="mb-3" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Desktop Layout: Two Column Grid */}
+        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+          {/* Main Content - Left Column */}
+          <div className="lg:col-span-2">
+            {/* Thread Header */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+              {/* Thread Status Indicators */}
+              <ThreadStatus pinned={thread.pinned} locked={thread.locked} className="mb-3" />
 
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{thread.title}</h1>
-          
-          {/* Thread Tags */}
-          <ThreadTags tags={thread.tags || []} className="mb-4" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{thread.title}</h1>
+              
+              {/* Thread Tags */}
+              <ThreadTags tags={thread.tags || []} className="mb-4" />
 
-          {/* Thread Author Info with Avatar */}
-          <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 mb-4 gap-2 sm:gap-0">
-            <div className="flex items-center">
-              <Avatar 
-                src={thread.user.avatar} 
-                username={thread.user.username} 
-                size="sm" 
-                className="mr-2" 
-              />
-              <span>Started by @{thread.user.username}</span>
-            </div>
-            <span className="hidden sm:inline mx-2">•</span>
-            <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
-            {thread.updatedAt && thread.updatedAt !== thread.createdAt && (
-              <>
+              {/* Thread Author Info with Avatar */}
+              <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 mb-4 gap-2 sm:gap-0">
+                <div className="flex items-center">
+                  <Avatar 
+                    src={thread.user.avatar} 
+                    username={thread.user.username} 
+                    size="sm" 
+                    className="mr-2" 
+                  />
+                  <span>Started by {thread.user.displayName || thread.user.username}</span>
+                </div>
                 <span className="hidden sm:inline mx-2">•</span>
-                <span className="text-gray-400">Updated {new Date(thread.updatedAt).toLocaleDateString()}</span>
-              </>
-            )}
-            <span className="hidden sm:inline mx-2">•</span>
-            <span>{posts.length} {posts.length === 1 ? 'reply' : 'replies'}</span>
-          </div>
-          
-          <div className="prose max-w-none">
-            <p className="text-gray-700 whitespace-pre-wrap">{thread.body}</p>
-          </div>
-        </div>
+                <span>{new Date(thread.createdAt).toLocaleString()}</span>
+                {thread.updatedAt && thread.updatedAt !== thread.createdAt && (
+                  <>
+                    <span className="hidden sm:inline mx-2">•</span>
+                    <span className="text-gray-400">Updated {new Date(thread.updatedAt).toLocaleString()}</span>
+                  </>
+                )}
+              </div>
 
-        {/* AI Summary Panel - Integrated with thread content */}
-        <ThreadSummaryPanel
-          threadId={id}
-          className="mb-6"
-        />
+              {/* Thread Stats */}
+              <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <span>{thread.views || 0} views</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <span>{posts.length} {posts.length === 1 ? 'reply' : 'replies'}</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  <span>{(thread.likes?.length || 0) + (thread.upvotes?.length || 0)} likes</span>
+                </div>
+              </div>
+              
+              <div className="prose max-w-none">
+                <p className="text-gray-700 whitespace-pre-wrap">{thread.body}</p>
+              </div>
+            </div>
 
-        {/* Thread Posts */}
-        <div className="space-y-4">
+            {/* Mobile AI Summary - Show only on mobile */}
+            <div className="lg:hidden mb-6">
+              <ThreadSummaryPanel
+                threadId={id}
+                className=""
+              />
+            </div>
+
+            {/* Thread Posts */}
+            <div className="space-y-4">
           {posts.map((post, index) => (
             <div 
               key={post.id} 
@@ -290,15 +317,15 @@ export default function ThreadPage() {
                       className="mr-3" 
                     />
                     <div className="flex flex-col">
-                      <span className="font-medium text-gray-900">@{post.user?.username || 'Unknown User'}</span>
+                      <span className="font-medium text-gray-900">{post.user?.displayName || post.user?.username || 'Unknown User'}</span>
                       <div className="flex items-center text-xs text-gray-400">
                         <span>Reply #{index + 1}</span>
                         <span className="mx-1">•</span>
-                        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                        <span>{new Date(post.createdAt).toLocaleString()}</span>
                         {post.updatedAt && post.updatedAt !== post.createdAt && (
                           <>
                             <span className="mx-1">•</span>
-                            <span className="italic">edited</span>
+                            <span className="italic">edited {new Date(post.updatedAt).toLocaleString()}</span>
                           </>
                         )}
                       </div>
@@ -328,12 +355,24 @@ export default function ThreadPage() {
           ))}
         </div>
 
-        {/* Empty state for threads with no posts */}
-        {posts.length === 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-            <p className="text-gray-500">No replies yet. Be the first to respond!</p>
+            {/* Empty state for threads with no posts */}
+            {posts.length === 0 && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+                <p className="text-gray-500">No replies yet. Be the first to respond!</p>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Right Sidebar - Desktop AI Summary */}
+          <div className="hidden lg:block lg:col-span-1">
+            <div className="sticky top-8">
+              <ThreadSummaryPanel
+                threadId={id}
+                className=""
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
