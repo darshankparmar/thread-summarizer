@@ -1,14 +1,9 @@
 'use client';
 
+import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { ForumsThread, ForumsPost } from '@/types';
 import ThreadSummaryPanel from '@/components/ThreadSummaryPanel';
-
-interface ThreadPageProps {
-  params: {
-    id: string;
-  };
-}
 
 interface ThreadPageState {
   thread: ForumsThread | null;
@@ -21,7 +16,10 @@ interface ThreadPageState {
 const MAX_RETRY_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 1000;
 
-export default function ThreadPage({ params }: ThreadPageProps) {
+export default function ThreadPage() {
+  const params = useParams();
+  const id = params.id as string;
+
   const [state, setState] = useState<ThreadPageState>({
     thread: null,
     posts: [],
@@ -37,12 +35,12 @@ export default function ThreadPage({ params }: ThreadPageProps) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-      const response = await fetch(`/api/thread/${params.id}`, {
+      const response = await fetch(`/api/thread/${id}`, {
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Thread not found. Please check the thread ID.');
@@ -54,7 +52,7 @@ export default function ThreadPage({ params }: ThreadPageProps) {
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch thread data');
       }
@@ -78,11 +76,11 @@ export default function ThreadPage({ params }: ThreadPageProps) {
   };
 
   const fetchThreadData = async () => {
-    setState(prev => ({ 
-      ...prev, 
-      isLoading: true, 
-      error: null, 
-      retryCount: 0 
+    setState(prev => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+      retryCount: 0
     }));
 
     let lastError: Error | null = null;
@@ -90,9 +88,9 @@ export default function ThreadPage({ params }: ThreadPageProps) {
     for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
       try {
         setState(prev => ({ ...prev, retryCount: attempt }));
-        
+
         const { thread, posts } = await fetchThreadDataWithRetry();
-        
+
         setState({
           thread,
           posts,
@@ -104,7 +102,7 @@ export default function ThreadPage({ params }: ThreadPageProps) {
 
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error occurred');
-        
+
         // Don't retry for 404 errors
         if (lastError.message.includes('Thread not found')) {
           break;
@@ -127,7 +125,7 @@ export default function ThreadPage({ params }: ThreadPageProps) {
 
   useEffect(() => {
     fetchThreadData();
-  }, [params.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { thread, posts, isLoading, error, retryCount } = state;
 
@@ -166,13 +164,13 @@ export default function ThreadPage({ params }: ThreadPageProps) {
                 <h1 className="text-lg font-medium text-red-800 mb-2">Error Loading Thread</h1>
                 <p className="text-red-600 mb-4">{error}</p>
                 <div className="flex gap-3">
-                  <button 
+                  <button
                     onClick={fetchThreadData}
                     className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
                     Try Again
                   </button>
-                  <button 
+                  <button
                     onClick={() => window.history.back()}
                     className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
                   >
@@ -194,7 +192,7 @@ export default function ThreadPage({ params }: ThreadPageProps) {
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
             <h1 className="text-xl font-semibold text-yellow-800 mb-2">Thread Not Found</h1>
             <p className="text-yellow-600 mb-4">The requested thread could not be found.</p>
-            <button 
+            <button
               onClick={() => window.history.back()}
               className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
             >
@@ -225,8 +223,8 @@ export default function ThreadPage({ params }: ThreadPageProps) {
         </div>
 
         {/* AI Summary Panel - Integrated with thread content */}
-        <ThreadSummaryPanel 
-          threadId={params.id} 
+        <ThreadSummaryPanel
+          threadId={id}
           className="mb-6"
         />
 

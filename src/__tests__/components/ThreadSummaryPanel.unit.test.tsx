@@ -101,8 +101,9 @@ describe('ThreadSummaryPanel Component', () => {
     fireEvent.click(generateButton);
     
     await waitFor(() => {
-      expect(screen.getByText('Error generating summary')).toBeInTheDocument();
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      // Should show the new ErrorDisplay component - it shows "Resource Not Found" for NOT_FOUND category
+      expect(screen.getByText('Resource Not Found')).toBeInTheDocument();
+      expect(screen.getByText('The requested resource could not be found.')).toBeInTheDocument();
     });
     
     // Should not show loading or success states
@@ -126,10 +127,11 @@ describe('ThreadSummaryPanel Component', () => {
     fireEvent.click(generateButton);
     
     await waitFor(() => {
-      expect(screen.getByText('Error generating summary')).toBeInTheDocument();
-      expect(screen.getByText('Network error. Please check your connection and try again.')).toBeInTheDocument();
-    }, { timeout: 10000 });
-  });
+      // Should show the new ErrorDisplay component with "Connection Problem" title
+      expect(screen.getByText('Connection Problem')).toBeInTheDocument();
+      expect(screen.getByText('Unable to connect to the forum service. Please check your internet connection.')).toBeInTheDocument();
+    }, { timeout: 15000 }); // Increase timeout to account for retries
+  }, 20000); // Set test timeout to 20 seconds
 
   /**
    * Test successful summary display
@@ -170,8 +172,8 @@ describe('ThreadSummaryPanel Component', () => {
       expect(screen.getAllByText((content, element) => {
         return element?.textContent?.includes('Healthy') || false
       })[0]).toBeInTheDocument();
-    });
-  });
+    }, { timeout: 10000 });
+  }, 15000); // Set test timeout to 15 seconds
 
   /**
    * Test accessibility features

@@ -1,4 +1,5 @@
 import { ForumsThread, ForumsPost } from '@/types';
+import { demoApiService } from './demo-api';
 
 /**
  * Configuration for Foru.ms API client
@@ -41,6 +42,15 @@ export class ForumsApiClient {
   async fetchThread(threadId: string): Promise<ForumsThread> {
     if (!threadId || threadId.trim() === '') {
       throw new ForumsApiError('Thread ID is required');
+    }
+
+    // Use demo data if demo mode is enabled
+    if (demoApiService.isDemoMode()) {
+      try {
+        return await demoApiService.fetchThread(threadId);
+      } catch {
+        throw new ForumsApiError(`Demo thread not found: ${threadId}`, 404);
+      }
     }
 
     try {
@@ -109,6 +119,15 @@ export class ForumsApiClient {
       throw new ForumsApiError('Thread ID is required');
     }
 
+    // Use demo data if demo mode is enabled
+    if (demoApiService.isDemoMode()) {
+      try {
+        return await demoApiService.fetchThreadPosts(threadId);
+      } catch {
+        throw new ForumsApiError(`Demo posts not found for thread: ${threadId}`, 404);
+      }
+    }
+
     try {
       const response = await fetch(`${this.config.baseUrl}/threads/${threadId}/posts`, {
         method: 'GET',
@@ -173,6 +192,15 @@ export class ForumsApiClient {
    * @throws ForumsApiError - When any API request fails
    */
   async fetchCompleteThread(threadId: string): Promise<{thread: ForumsThread, posts: ForumsPost[]}> {
+    // Use demo data if demo mode is enabled
+    if (demoApiService.isDemoMode()) {
+      try {
+        return await demoApiService.fetchCompleteThread(threadId);
+      } catch {
+        throw new ForumsApiError(`Demo thread not found: ${threadId}`, 404);
+      }
+    }
+
     try {
       // Fetch thread and posts concurrently for better performance
       const [thread, posts] = await Promise.all([

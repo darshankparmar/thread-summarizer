@@ -19,21 +19,45 @@ export default function Home() {
               Try the thread summarizer with these sample thread IDs:
             </p>
             
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Link 
-                href="/thread/demo-thread-1"
+                href="/thread/demo-empty-001"
                 className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
               >
-                <h3 className="font-medium text-gray-900">Demo Thread 1</h3>
-                <p className="text-sm text-gray-600">Sample discussion thread</p>
+                <h3 className="font-medium text-gray-900">Empty Thread</h3>
+                <p className="text-sm text-gray-600">Edge case: Thread with no replies</p>
               </Link>
               
               <Link 
-                href="/thread/demo-thread-2"
+                href="/thread/demo-single-002"
                 className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
               >
-                <h3 className="font-medium text-gray-900">Demo Thread 2</h3>
-                <p className="text-sm text-gray-600">Another sample thread</p>
+                <h3 className="font-medium text-gray-900">Single Reply</h3>
+                <p className="text-sm text-gray-600">Minimal content thread</p>
+              </Link>
+
+              <Link 
+                href="/thread/demo-heated-003"
+                className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              >
+                <h3 className="font-medium text-gray-900">Heated Debate</h3>
+                <p className="text-sm text-gray-600">Microservices vs Monoliths discussion</p>
+              </Link>
+
+              <Link 
+                href="/thread/demo-positive-004"
+                className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              >
+                <h3 className="font-medium text-gray-900">Constructive Discussion</h3>
+                <p className="text-sm text-gray-600">Code review best practices</p>
+              </Link>
+
+              <Link 
+                href="/thread/demo-technical-005"
+                className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              >
+                <h3 className="font-medium text-gray-900">Technical Problem</h3>
+                <p className="text-sm text-gray-600">React performance optimization</p>
               </Link>
             </div>
             

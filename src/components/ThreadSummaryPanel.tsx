@@ -3,16 +3,17 @@
 import { useState } from 'react';
 import { SummaryData, ThreadSummaryPanelProps } from '../types';
 import { SummaryDisplay, LoadingDisplay, getHealthLabel } from './SummaryDataFormatter';
+import ErrorDisplay from './ErrorDisplay';
+import { errorHandler, UserFriendlyError } from '@/services/error-handler';
 
 interface ThreadSummaryPanelState {
   isLoading: boolean;
   data: SummaryData | null;
-  error: string | null;
+  error: UserFriendlyError | null;
   retryCount: number;
 }
 
 const MAX_RETRY_ATTEMPTS = 3;
-const RETRY_DELAY_MS = 1000;
 
 export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadSummaryPanelProps) {
   const [state, setState] = useState<ThreadSummaryPanelState>({
@@ -113,25 +114,44 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error occurred');
         
-        // Don't retry for certain types of errors
-        if (lastError.message.includes('Thread not found') || 
-            lastError.message.includes('Rate limit exceeded')) {
-          break;
+        // Process error through error handler
+        const processedError = errorHandler.processError(lastError, 'summary generation');
+        
+        // Don't retry for non-retryable errors
+        if (!errorHandler.isRetryable(processedError)) {
+          setState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            error: processedError 
+          }));
+          return;
         }
 
         // If this isn't the last attempt, wait before retrying
         if (attempt < MAX_RETRY_ATTEMPTS) {
-          await delay(RETRY_DELAY_MS * attempt); // Exponential backoff
+          const retryDelay = Math.min(errorHandler.getRetryDelay(processedError), 5000);
+          await delay(retryDelay);
         }
       }
     }
 
     // All retries failed
-    setState(prev => ({ 
-      ...prev, 
-      isLoading: false, 
-      error: lastError?.message || 'Failed to generate summary after multiple attempts' 
-    }));
+    if (lastError) {
+      const processedError = errorHandler.processError(lastError, 'summary generation after retries');
+      setState(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: processedError 
+      }));
+    }
+  };
+
+  const handleRetry = () => {
+    generateSummary();
+  };
+
+  const handleDismissError = () => {
+    setState(prev => ({ ...prev, error: null }));
   };
 
   const { isLoading, data, error, retryCount } = state;
@@ -143,7 +163,7 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
         <button
           onClick={generateSummary}
           disabled={isLoading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? (
             retryCount > 1 ? `Retrying... (${retryCount}/${MAX_RETRY_ATTEMPTS})` : 'Generating...'
@@ -154,33 +174,34 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
       {/* Loading State */}
       {isLoading && <LoadingDisplay />}
 
-      {/* Error State with Retry Option */}
+      {/* Enhanced Error State */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3 flex-1">
-              <h4 className="text-sm font-medium text-red-800">Error generating summary</h4>
-              <p className="mt-1 text-sm text-red-700">{error}</p>
-              <div className="mt-3">
-                <button
-                  onClick={generateSummary}
-                  className="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-md hover:bg-red-200"
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ErrorDisplay
+          error={error}
+          onRetry={handleRetry}
+          onDismiss={handleDismissError}
+          showTechnicalDetails={process.env.NODE_ENV === 'development'}
+          className="mb-4"
+        />
       )}
 
       {/* Summary Data Display - Text-based presentation without charts/graphs */}
       {data && <SummaryDisplay data={data} />}
+
+      {/* Fallback content when error has fallback data */}
+      {error && !data && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+          <h4 className="font-medium text-yellow-800 mb-2">Basic Thread Information</h4>
+          <div className="text-sm text-yellow-700">
+            <p>While we couldn&apos;t generate a full AI summary, here&apos;s what we know:</p>
+            <ul className="mt-2 space-y-1">
+              <li>• Thread ID: {threadId}</li>
+              <li>• Status: Analysis unavailable</li>
+              <li>• You can try again once the issue is resolved</li>
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

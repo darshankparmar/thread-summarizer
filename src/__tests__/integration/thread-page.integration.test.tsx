@@ -4,8 +4,8 @@
  */
 
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { useParams } from 'next/navigation'
 import '@testing-library/jest-dom'
-import { jest } from '@jest/globals'
 import ThreadPage from '@/app/thread/[id]/page'
 import { mockForumsApiResponse, createMockSummaryData } from '../utils/mock-data'
 
@@ -15,6 +15,7 @@ jest.mock('next/navigation', () => ({
     push: jest.fn(),
     back: jest.fn(),
   }),
+  useParams: jest.fn(),
 }))
 
 // Mock window.history.back
@@ -31,12 +32,13 @@ global.fetch = mockFetch
 
 describe('Thread Page Integration Tests', () => {
   const mockThreadId = 'test-thread-123'
-  const mockParams = { id: mockThreadId }
 
   beforeEach(() => {
     jest.clearAllMocks()
     mockFetch.mockClear()
     mockFetch.mockReset()
+
+    jest.mocked(useParams).mockReturnValue({ id: mockThreadId })
   })
 
   afterEach(() => {
@@ -58,7 +60,7 @@ describe('Thread Page Integration Tests', () => {
         json: () => Promise.resolve(mockThreadResponse)
       } as Response)
 
-      render(<ThreadPage params={mockParams} />)
+      render(<ThreadPage />)
 
       // Wait for thread data to load
       await waitFor(() => {
@@ -75,7 +77,7 @@ describe('Thread Page Integration Tests', () => {
       // Verify posts are displayed - use getAllByText for multiple elements
       const replyElements = screen.getAllByText(/Reply #[123]/)
       expect(replyElements).toHaveLength(3)
-      
+
       // Check for usernames in posts
       expect(screen.getAllByText((content, element) => {
         return element?.textContent?.includes('@alice') || false
@@ -124,7 +126,7 @@ describe('Thread Page Integration Tests', () => {
           json: () => Promise.resolve(mockSummaryResponse)
         } as Response)
 
-      render(<ThreadPage params={mockParams} />)
+      render(<ThreadPage />)
 
       // Wait for thread data to load
       await waitFor(() => {
@@ -173,7 +175,7 @@ describe('Thread Page Integration Tests', () => {
         json: () => Promise.resolve({ error: 'Thread not found' })
       } as Response)
 
-      render(<ThreadPage params={mockParams} />)
+      render(<ThreadPage />)
 
       // Wait for error state
       await waitFor(() => {
@@ -199,7 +201,7 @@ describe('Thread Page Integration Tests', () => {
       } as Response)
 
       const startTime = Date.now()
-      render(<ThreadPage params={mockParams} />)
+      render(<ThreadPage />)
 
       await waitFor(() => {
         expect(screen.getByText(mockForumsApiResponse.thread.title)).toBeInTheDocument()
@@ -223,7 +225,7 @@ describe('Thread Page Integration Tests', () => {
         json: () => Promise.resolve(mockEmptyThreadResponse)
       } as Response)
 
-      render(<ThreadPage params={mockParams} />)
+      render(<ThreadPage />)
 
       await waitFor(() => {
         expect(screen.getByText(mockForumsApiResponse.thread.title)).toBeInTheDocument()
@@ -263,7 +265,7 @@ describe('Thread Page Integration Tests', () => {
           json: () => Promise.resolve(mockCachedSummaryResponse)
         } as Response)
 
-      render(<ThreadPage params={mockParams} />)
+      render(<ThreadPage />)
 
       // Wait for thread to load
       await waitFor(() => {

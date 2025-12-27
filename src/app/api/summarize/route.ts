@@ -3,6 +3,7 @@ import { threadFetcher } from '@/services/thread-fetcher';
 import { aiService } from '@/services/ai-service';
 import { cacheManager } from '@/services/cache-manager';
 import { performanceMonitor } from '@/services/performance-monitor';
+import { errorHandler } from '@/services/error-handler';
 import { SummarizeRequest } from '@/types';
 import { apiMiddleware, InputValidator } from '@/lib/middleware';
 
@@ -58,14 +59,30 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
     const threadResult = await threadFetcher.fetchThreadData(sanitizedThreadId);
     
     if (!threadResult.success || !threadResult.data) {
-      // Handle thread fetching errors
+      // Handle thread fetching errors with enhanced error processing
+      const processedError = errorHandler.processError(
+        threadResult.error || 'Failed to fetch thread data',
+        'thread fetching'
+      );
+      
       performanceMonitor.completeRequest(requestId, threadResult.error);
+      
+      // Generate fallback content for certain error types
+      const fallbackData = errorHandler.generateFallbackContent(processedError, sanitizedThreadId);
+      
       return NextResponse.json({
         success: false,
-        error: threadResult.error || 'Failed to fetch thread data',
+        error: processedError.message,
+        fallback: fallbackData,
         cached: false,
         generatedAt: new Date().toISOString()
-      }, { status: threadResult.error?.includes('not found') ? 404 : 500 });
+      }, { 
+        status: processedError.category === 'NOT_FOUND' ? 404 : 500,
+        headers: {
+          'X-Error-Category': processedError.category,
+          'X-Retryable': processedError.retryable.toString()
+        }
+      });
     }
 
     const { thread, posts, lastPostTimestamp } = threadResult.data;
@@ -135,13 +152,22 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
     performanceMonitor.recordAIProcessingTime(requestId, aiProcessingTime);
     
     if (!aiResult.success || !aiResult.data) {
-      // Handle AI processing errors
+      // Handle AI processing errors with enhanced error processing
+      const processedError = errorHandler.processError(
+        aiResult.error || 'AI processing failed',
+        'AI summary generation'
+      );
+      
       const responseTime = Date.now() - startTime;
       performanceMonitor.completeRequest(requestId, aiResult.error);
 
+      // Generate fallback content
+      const fallbackData = errorHandler.generateFallbackContent(processedError, sanitizedThreadId);
+
       return NextResponse.json({
         success: false,
-        error: aiResult.error || 'AI processing failed',
+        error: processedError.message,
+        fallback: fallbackData,
         cached: false,
         generatedAt: new Date().toISOString()
       }, { 
@@ -149,7 +175,10 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
         headers: {
           'X-Response-Time': `${responseTime}ms`,
           'X-Cache-Status': 'MISS',
-          'X-AI-Status': 'FAILED'
+          'X-AI-Status': 'FAILED',
+          'X-Error-Category': processedError.category,
+          'X-Retryable': processedError.retryable.toString(),
+          ...(processedError.retryAfter && { 'Retry-After': processedError.retryAfter.toString() })
         }
       });
     }
@@ -182,20 +211,28 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
     });
 
   } catch (error) {
-    // Handle unexpected errors
+    // Handle unexpected errors with enhanced error processing
     const responseTime = Date.now() - startTime;
+    const processedError = errorHandler.processError(error, 'API request processing');
+    
     console.error('Unexpected error in /api/summarize:', error);
+
+    // Generate fallback content
+    const fallbackData = errorHandler.generateFallbackContent(processedError);
 
     return NextResponse.json({
       success: false,
-      error: 'An unexpected error occurred while processing the request',
+      error: processedError.message,
+      fallback: fallbackData,
       cached: false,
       generatedAt: new Date().toISOString()
     }, { 
       status: 500,
       headers: {
         'X-Response-Time': `${responseTime}ms`,
-        'X-Cache-Status': 'ERROR'
+        'X-Cache-Status': 'ERROR',
+        'X-Error-Category': processedError.category,
+        'X-Retryable': processedError.retryable.toString()
       }
     });
   }
