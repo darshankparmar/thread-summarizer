@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +15,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Thread Summarizer",
-  description: "AI-powered intelligence layer for forum discussions",
+  title: "ThreadWise - Smart Forum Thread Analysis",
+  description: "AI-powered insights for forum discussions. Analyze threads, extract key points, and understand conversations instantly.",
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.svg', sizes: '32x32', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: [
+      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -23,11 +35,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider>
+          <Navbar />
+          <main>
+            {children}
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );

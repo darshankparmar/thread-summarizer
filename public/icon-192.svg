@@ -1,0 +1,24 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ea580c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c2410c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="highlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.2);stop-opacity:1" />
+      <stop offset="50%" style="stop-color:rgba(255,255,255,0.1);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0.05);stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded rectangle background -->
+  <rect width="192" height="192" rx="36" ry="36" fill="url(#bgGradient)"/>
+  
+  <!-- Highlight overlay -->
+  <rect width="192" height="192" rx="36" ry="36" fill="url(#highlight)"/>
+  
+  <!-- Letter T -->
+  <text x="96" y="130" font-family="system-ui, -apple-system, sans-serif" font-size="108" font-weight="bold" text-anchor="middle" fill="white" style="text-shadow: 0 4px 8px rgba(0,0,0,0.3);">T</text>
+</svg>

@@ -6,6 +6,10 @@ import { ForumsThread } from '@/types';
 import Avatar from '@/components/Avatar';
 import ThreadTags from '@/components/ThreadTags';
 import ThreadStatus from '@/components/ThreadStatus';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ThreadsResponse {
   success: boolean;
@@ -42,20 +46,14 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-background py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Thread Summarizer
-            </h1>
-            <p className="text-xl text-gray-600">
-              AI-powered forum thread analysis and summarization
-            </p>
-          </div>
-          
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading available threads...</p>
+            <div className="relative inline-block">
+              <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-secondary/40 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+            </div>
+            <p className="text-text-secondary font-medium">Loading available threads...</p>
           </div>
         </div>
       </div>
@@ -64,57 +62,53 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-background py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Thread Summarizer
-            </h1>
-            <p className="text-xl text-gray-600">
-              AI-powered forum thread analysis and summarization
-            </p>
-          </div>
-          
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <Alert variant="destructive" className="text-center">
             <div className="flex items-center justify-center mb-4">
-              <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-lg font-medium text-red-800 mb-2">Unable to Load Threads</h2>
-            <p className="text-red-600 mb-4">{error}</p>
-            <button
+            <AlertTitle className="text-xl mb-3">Unable to Load Threads</AlertTitle>
+            <AlertDescription className="mb-6 leading-relaxed">{error}</AlertDescription>
+            <Button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              variant="destructive"
+              size="lg"
             >
               Try Again
-            </button>
-          </div>
+            </Button>
+          </Alert>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Welcome Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Thread Summarizer
+          <h1 className="text-4xl font-bold text-text-primary mb-4">
+            Welcome to ThreadWise
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
-            AI-powered forum thread analysis and summarization
+          <p className="text-lg text-text-secondary mb-8 leading-relaxed max-w-2xl mx-auto">
+            Discover and analyze forum discussions with AI-powered insights. Get instant summaries, key points, and sentiment analysis.
           </p>
         </div>
 
         {/* Threads Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Available Threads</h2>
+          <h2 className="text-2xl font-semibold text-text-primary mb-6 flex items-center gap-3">
+            <span className="w-3 h-3 bg-primary rounded-full"></span>
+            Available Threads
+          </h2>
           
           {threads.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-              <p className="text-gray-500">No threads available at the moment.</p>
+            <div className="bg-surface rounded-xl shadow-sm border border-secondary/20 p-8 text-center backdrop-blur-sm">
+              <div className="text-6xl mb-4">💬</div>
+              <p className="text-text-secondary">No threads available at the moment.</p>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
@@ -122,13 +116,18 @@ export default function Home() {
                 <Link
                   key={thread.id}
                   href={`/thread/${thread.id}`}
-                  className="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                  className="
+                    block bg-surface rounded-xl shadow-sm border border-secondary/20 p-6 
+                    hover:border-primary/40 hover:shadow-lg hover:scale-[1.02]
+                    transition-all duration-300 backdrop-blur-sm
+                    focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+                  "
                 >
                   {/* Thread Status */}
-                  <ThreadStatus pinned={thread.pinned} locked={thread.locked} className="mb-3" />
+                  <ThreadStatus pinned={thread.pinned} locked={thread.locked} className="mb-4" />
                   
                   {/* Thread Title */}
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3 hover:text-blue-600 transition-colors">
+                  <h3 className="text-xl font-semibold text-text-primary mb-4 hover:text-primary transition-colors leading-relaxed">
                     {thread.title}
                   </h3>
                   
@@ -136,7 +135,7 @@ export default function Home() {
                   <ThreadTags tags={thread.tags || []} className="mb-4" />
                   
                   {/* Thread Preview */}
-                  <p className="text-gray-600 mb-4 line-clamp-3">
+                  <p className="text-text-secondary mb-6 line-clamp-3 leading-relaxed">
                     {thread.body.length > 200 
                       ? `${thread.body.substring(0, 200)}...` 
                       : thread.body
@@ -144,22 +143,22 @@ export default function Home() {
                   </p>
                   
                   {/* Thread Stats */}
-                  <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-6 text-sm text-text-secondary mb-4">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                       <span>{thread.views} views</span>
                     </div>
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
                       <span>{thread._count?.Post || 0} replies</span>
                     </div>
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                       <span>{(thread.likes?.length || 0) + (thread.upvotes?.length || 0)} likes</span>
@@ -167,29 +166,26 @@ export default function Home() {
                   </div>
                   
                   {/* Thread Meta */}
-                  <div className="flex items-center justify-between text-sm text-gray-500">
+                  <div className="flex items-center justify-between text-sm text-text-secondary">
                     <div className="flex items-center">
                       <Avatar 
                         src={thread.user.avatar} 
                         username={thread.user.username} 
                         size="sm" 
-                        className="mr-2" 
+                        className="mr-3" 
                       />
                       <span>by {thread.user.displayName || thread.user.username}</span>
-                      <span className="mx-2">•</span>
-                      <span>
-                        {thread.updatedAt !== thread.createdAt 
-                          ? `Updated ${new Date(thread.updatedAt).toLocaleString()}`
-                          : `Created ${new Date(thread.createdAt).toLocaleString()}`
-                        }
-                      </span>
+                      <span className="mx-2 text-secondary">•</span>
+                      <span>{`Created ${new Date(thread.createdAt).toLocaleString()}`}</span>
                     </div>
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    {/* 
+                    <div className="flex items-center gap-2 text-primary font-medium">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
                       <span>Analyze Thread</span>
-                    </div>
+                    </div> 
+                    */}
                   </div>
                 </Link>
               ))}
@@ -198,40 +194,44 @@ export default function Home() {
         </div>
 
         {/* Call to Action */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Have a specific thread in mind?
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Enter a thread ID directly to analyze any thread from Foru.ms
-          </p>
-          <div className="flex max-w-md mx-auto">
-            <input
-              type="text"
-              placeholder="Enter thread ID..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  const input = e.target as HTMLInputElement;
-                  if (input.value.trim()) {
+        <Card className="text-center">
+          <CardHeader>
+            <div className="text-4xl mb-4">🔍</div>
+            <CardTitle>Have a specific thread in mind?</CardTitle>
+            <CardDescription>
+              Enter a thread ID directly to analyze any thread from Foru.ms
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex max-w-md mx-auto">
+              <Input
+                type="text"
+                placeholder="Enter thread ID..."
+                className="rounded-r-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const input = e.target as HTMLInputElement;
+                    if (input.value.trim()) {
+                      window.location.href = `/thread/${input.value.trim()}`;
+                    }
+                  }
+                }}
+              />
+              <Button
+                onClick={() => {
+                  const input = document.querySelector('input[placeholder="Enter thread ID..."]') as HTMLInputElement;
+                  if (input?.value.trim()) {
                     window.location.href = `/thread/${input.value.trim()}`;
                   }
-                }
-              }}
-            />
-            <button
-              onClick={() => {
-                const input = document.querySelector('input[placeholder="Enter thread ID..."]') as HTMLInputElement;
-                if (input?.value.trim()) {
-                  window.location.href = `/thread/${input.value.trim()}`;
-                }
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Analyze
-            </button>
-          </div>
-        </div>
+                }}
+                className="rounded-l-none"
+                size="default"
+              >
+                Analyze
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

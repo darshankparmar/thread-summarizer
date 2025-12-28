@@ -7,7 +7,6 @@ interface ErrorDisplayProps {
   error: UserFriendlyError;
   onRetry?: () => void;
   onDismiss?: () => void;
-  showTechnicalDetails?: boolean;
   className?: string;
 }
 
@@ -24,25 +23,23 @@ const categoryIcons = {
 };
 
 const categoryColors = {
-  [ErrorCategory.NETWORK]: 'border-blue-200 bg-blue-50',
-  [ErrorCategory.API]: 'border-orange-200 bg-orange-50',
-  [ErrorCategory.AI_PROCESSING]: 'border-purple-200 bg-purple-50',
-  [ErrorCategory.VALIDATION]: 'border-yellow-200 bg-yellow-50',
-  [ErrorCategory.RATE_LIMIT]: 'border-indigo-200 bg-indigo-50',
-  [ErrorCategory.TIMEOUT]: 'border-red-200 bg-red-50',
-  [ErrorCategory.NOT_FOUND]: 'border-gray-200 bg-gray-50',
-  [ErrorCategory.AUTHENTICATION]: 'border-red-200 bg-red-50',
-  [ErrorCategory.UNKNOWN]: 'border-gray-200 bg-gray-50'
+  [ErrorCategory.NETWORK]: 'border-blue-200/50 bg-blue-50/50 dark:border-blue-400/30 dark:bg-blue-900/20',
+  [ErrorCategory.API]: 'border-orange-200/50 bg-orange-50/50 dark:border-orange-400/30 dark:bg-orange-900/20',
+  [ErrorCategory.AI_PROCESSING]: 'border-purple-200/50 bg-purple-50/50 dark:border-purple-400/30 dark:bg-purple-900/20',
+  [ErrorCategory.VALIDATION]: 'border-yellow-200/50 bg-yellow-50/50 dark:border-yellow-400/30 dark:bg-yellow-900/20',
+  [ErrorCategory.RATE_LIMIT]: 'border-indigo-200/50 bg-indigo-50/50 dark:border-indigo-400/30 dark:bg-indigo-900/20',
+  [ErrorCategory.TIMEOUT]: 'border-red-200/50 bg-red-50/50 dark:border-red-400/30 dark:bg-red-900/20',
+  [ErrorCategory.NOT_FOUND]: 'border-gray-200/50 bg-gray-50/50 dark:border-gray-400/30 dark:bg-gray-900/20',
+  [ErrorCategory.AUTHENTICATION]: 'border-red-200/50 bg-red-50/50 dark:border-red-400/30 dark:bg-red-900/20',
+  [ErrorCategory.UNKNOWN]: 'border-gray-200/50 bg-gray-50/50 dark:border-gray-400/30 dark:bg-gray-900/20'
 };
 
 export default function ErrorDisplay({
   error,
   onRetry,
   onDismiss,
-  showTechnicalDetails = false,
   className = ''
 }: ErrorDisplayProps) {
-  const [showDetails, setShowDetails] = useState(false);
   const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
 
   const icon = categoryIcons[error.category];
@@ -68,7 +65,11 @@ export default function ErrorDisplay({
   };
 
   return (
-    <div className={`rounded-lg border-2 p-6 ${colorClass} ${className}`}>
+    <div className={`
+      rounded-xl border-2 p-6 backdrop-blur-sm
+      ${colorClass} 
+      ${className}
+    `}>
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -76,10 +77,10 @@ export default function ErrorDisplay({
             {icon}
           </span>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-text-primary">
               {error.title}
             </h3>
-            <p className="text-gray-700 mt-1">
+            <p className="text-text-secondary mt-1 leading-relaxed">
               {error.message}
             </p>
           </div>
@@ -88,7 +89,11 @@ export default function ErrorDisplay({
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="
+              text-text-secondary/60 hover:text-text-secondary 
+              transition-colors duration-200 p-1 rounded-md
+              hover:bg-surface/50
+            "
             aria-label="Dismiss error"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,12 +106,15 @@ export default function ErrorDisplay({
       {/* Suggestions */}
       {error.suggestions.length > 0 && (
         <div className="mb-4">
-          <h4 className="font-medium text-gray-900 mb-2">What you can try:</h4>
-          <ul className="space-y-1">
+          <h4 className="font-medium text-text-primary mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+            What you can try:
+          </h4>
+          <ul className="space-y-2">
             {error.suggestions.map((suggestion, index) => (
-              <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                <span className="text-gray-400 mt-0.5">•</span>
-                <span>{suggestion}</span>
+              <li key={index} className="flex items-start gap-3 text-sm text-text-secondary">
+                <span className="text-primary mt-1 text-xs">•</span>
+                <span className="leading-relaxed">{suggestion}</span>
               </li>
             ))}
           </ul>
@@ -114,15 +122,28 @@ export default function ErrorDisplay({
       )}
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3">
         {error.retryable && onRetry && (
           <button
             onClick={handleRetry}
             disabled={retryCountdown !== null}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="
+              px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg 
+              hover:bg-primary/90 active:bg-primary/80
+              disabled:bg-gray-400 disabled:cursor-not-allowed 
+              transition-all duration-200 transform hover:scale-105 active:scale-95
+              focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+              shadow-sm hover:shadow-md
+            "
           >
             {retryCountdown !== null ? (
-              `Retry in ${retryCountdown}s`
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Retry in {retryCountdown}s
+              </span>
             ) : (
               'Try Again'
             )}

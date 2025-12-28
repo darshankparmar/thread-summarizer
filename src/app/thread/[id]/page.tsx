@@ -135,16 +135,16 @@ export default function ThreadPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-background py-8">
         <div className="max-w-4xl mx-auto px-4">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded mb-8"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-surface rounded mb-4"></div>
+            <div className="h-4 bg-surface rounded mb-2"></div>
+            <div className="h-4 bg-surface rounded mb-8"></div>
+            <div className="h-32 bg-surface rounded"></div>
           </div>
           {retryCount > 1 && (
-            <div className="mt-4 text-center text-sm text-gray-600">
+            <div className="mt-4 text-center text-sm text-text-secondary">
               Retrying... (attempt {retryCount}/{MAX_RETRY_ATTEMPTS})
             </div>
           )}
@@ -155,9 +155,9 @@ export default function ThreadPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-background py-8">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,18 +165,18 @@ export default function ThreadPage() {
                 </svg>
               </div>
               <div className="ml-3 flex-1">
-                <h1 className="text-lg font-medium text-red-800 mb-2">Error Loading Thread</h1>
-                <p className="text-red-600 mb-4">{error}</p>
+                <h1 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">Error Loading Thread</h1>
+                <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
                 <div className="flex gap-3">
                   <button
                     onClick={fetchThreadData}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                   >
                     Try Again
                   </button>
                   <button
                     onClick={() => window.history.back()}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    className="px-4 py-2 bg-surface text-text-primary border border-secondary/30 rounded-md hover:bg-secondary/20 transition-colors"
                   >
                     Go Back
                   </button>
@@ -191,14 +191,14 @@ export default function ThreadPage() {
 
   if (!thread) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-background py-8">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-            <h1 className="text-xl font-semibold text-yellow-800 mb-2">Thread Not Found</h1>
-            <p className="text-yellow-600 mb-4">The requested thread could not be found.</p>
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+            <h1 className="text-xl font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Thread Not Found</h1>
+            <p className="text-yellow-600 dark:text-yellow-300 mb-4">The requested thread could not be found.</p>
             <button
               onClick={() => window.history.back()}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
+              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
             >
               Go Back
             </button>
@@ -209,24 +209,24 @@ export default function ThreadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+    <div className="min-h-screen bg-background py-4 sm:py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Desktop Layout: Two Column Grid */}
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
           {/* Main Content - Left Column */}
           <div className="lg:col-span-2">
             {/* Thread Header */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+            <div className="bg-surface rounded-lg shadow-sm border border-secondary/20 p-4 sm:p-6 mb-6">
               {/* Thread Status Indicators */}
               <ThreadStatus pinned={thread.pinned} locked={thread.locked} className="mb-3" />
 
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">{thread.title}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary mb-4">{thread.title}</h1>
               
               {/* Thread Tags */}
               <ThreadTags tags={thread.tags || []} className="mb-4" />
 
               {/* Thread Author Info with Avatar */}
-              <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 mb-4 gap-2 sm:gap-0">
+              <div className="flex flex-col sm:flex-row sm:items-center text-sm text-text-secondary mb-4 gap-2 sm:gap-0">
                 <div className="flex items-center">
                   <Avatar 
                     src={thread.user.avatar} 
@@ -238,16 +238,10 @@ export default function ThreadPage() {
                 </div>
                 <span className="hidden sm:inline mx-2">•</span>
                 <span>{new Date(thread.createdAt).toLocaleString()}</span>
-                {/* {thread.updatedAt && thread.updatedAt !== thread.createdAt && (
-                  <>
-                    <span className="hidden sm:inline mx-2">•</span>
-                    <span className="text-gray-400">Updated {new Date(thread.updatedAt).toLocaleString()}</span>
-                  </>
-                )} */}
               </div>
 
               {/* Thread Stats */}
-              <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+              <div className="flex items-center gap-4 text-sm text-text-secondary mb-4">
                 <div className="flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -270,7 +264,7 @@ export default function ThreadPage() {
               </div>
               
               <div className="prose max-w-none">
-                <p className="text-gray-700 whitespace-pre-wrap">{thread.body}</p>
+                <p className="text-text-secondary whitespace-pre-wrap">{thread.body}</p>
               </div>
             </div>
 
@@ -284,10 +278,10 @@ export default function ThreadPage() {
 
             {/* Thread Posts Header */}
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-text-primary">
                 Discussion ({posts.length} {posts.length === 1 ? 'reply' : 'replies'})
               </h3>
-              <div className="text-sm text-gray-500 flex items-center">
+              <div className="text-sm text-text-secondary flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                 </svg>
@@ -310,8 +304,8 @@ export default function ThreadPage() {
 
             {/* Empty state for threads with no posts */}
             {posts.length === 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-                <p className="text-gray-500">No replies yet. Be the first to respond!</p>
+              <div className="bg-surface rounded-lg shadow-sm border border-secondary/20 p-6 text-center">
+                <p className="text-text-secondary">No replies yet. Be the first to respond!</p>
               </div>
             )}
           </div>
