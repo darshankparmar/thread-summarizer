@@ -193,13 +193,12 @@ export class ErrorHandlerService {
                 category: ErrorCategory.AI_PROCESSING,
                 title: 'Analysis Failed',
                 message:
-                    'The AI analysis service encountered an error. A basic summary is available instead.',
+                    'The AI analysis service encountered an error.',
                 actionable: true,
                 retryable: true,
                 suggestions: [
                     'Try again in a few moments',
-                    'The basic thread statistics are still available',
-                    'Consider trying with a different thread'
+                    'If the problem persists, contact support'
                 ],
                 technicalDetails
             };

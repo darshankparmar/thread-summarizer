@@ -174,23 +174,15 @@ export class ThreadFetcherService {
    * @returns boolean - True if thread has sufficient content for analysis
    */
   isSuitableForAnalysis(data: CompleteThreadData): boolean {
-    // Thread needs at least some content
-    if (!data.thread.body || data.thread.body.trim().length < 10) {
-      // If thread body is too short, check if posts have meaningful content
-      if (data.posts.length === 0) {
-        return false;
-      }
+    // Calculate total content length
+    const threadBodyLength = (data.thread.body || '').trim().length;
+    const totalPostContent = data.posts.reduce((total, post) => 
+      total + (post.body || '').trim().length, 0
+    );
+    const totalContentLength = threadBodyLength + totalPostContent;
 
-      // For threads with posts, ensure posts have meaningful content
-      const meaningfulPosts = data.posts.filter(post => 
-        post.body && post.body.trim().length > 5
-      );
-
-      return meaningfulPosts.length > 0;
-    }
-
-    // For threads with adequate body content, we can analyze regardless of posts
-    return true;
+    // Need at least 50 characters of meaningful content for AI analysis
+    return totalContentLength >= 50;
   }
 
   /**

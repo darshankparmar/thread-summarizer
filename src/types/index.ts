@@ -87,8 +87,8 @@ export interface Contributor {
   contribution: string;
 }
 
-export type SentimentType = 'Positive' | 'Neutral' | 'Mixed' | 'Negative';
-export type HealthLabel = 'Healthy' | 'Needs Attention' | 'Heated Discussion';
+export type SentimentType = 'Positive' | 'Neutral' | 'Mixed' | 'Negative' | 'No Discussion';
+export type HealthLabel = 'Healthy' | 'Needs Attention' | 'Heated Discussion' | 'New Thread';
 
 export interface SummaryData {
   summary: string[];

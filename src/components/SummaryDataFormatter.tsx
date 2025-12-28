@@ -3,7 +3,7 @@ import { SummaryData, Contributor, SentimentType, HealthLabel } from '../types';
 
 // Utility functions for data formatting
 export const formatContributor = (contributor: Contributor): string => {
-  return `@${contributor.username} – ${contributor.contribution}`;
+  return `${contributor.username} – ${contributor.contribution}`;
 };
 
 export const getHealthLabel = (healthScore: number): HealthLabel => {
@@ -17,7 +17,8 @@ export const getSentimentEmoji = (sentiment: SentimentType): string => {
     'Positive': '😊',
     'Neutral': '😐',
     'Mixed': '🤔',
-    'Negative': '😠'
+    'Negative': '😠',
+    'No Discussion': '💬'
   };
   return emojiMap[sentiment];
 };
@@ -74,11 +75,15 @@ export function SummaryDisplay({ data }: SummaryDisplayProps) {
             <span className="sentiment-emoji">{getSentimentEmoji(data.sentiment)}</span>
             <span className="sentiment-text text-gray-700"> {data.sentiment}</span>
           </div>
-          <div className="health-score-display">
-            <span className="font-medium text-gray-900">Health: </span>
-            <span className="health-score text-gray-900">{data.healthScore}/10</span>
-            <span className="health-label text-gray-600"> ({data.healthLabel})</span>
-          </div>
+          {data.healthScore !== 0 && (
+            <>
+              <div className="health-score-display">
+                <span className="font-medium text-gray-900">Health: </span>
+                <span className="health-score text-gray-900">{data.healthScore}/10</span>
+                <span className="health-label text-gray-600"> ({data.healthLabel})</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

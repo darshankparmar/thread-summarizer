@@ -225,6 +225,7 @@ export class AIService {
 
   /**
    * Handle edge cases before AI processing
+   * Only skip AI for truly minimal content (< 50 chars total)
    */
   private handleEdgeCases(
     thread: ForumsThread,
@@ -238,16 +239,21 @@ export class AIService {
           summary: ["Thread has no posts yet"],
           keyPoints: ["No discussion content available"],
           contributors: [],
-          sentiment: "Neutral",
-          healthScore: 5,
-          healthLabel: "Needs Attention"
+          sentiment: "No Discussion",
+          healthScore: 0,
+          healthLabel: "New Thread"
         },
         fallback: true
       };
     }
 
-    // Single or very few posts case
-    if (posts.length <= 2) {
+    // Check if content is substantial enough for AI processing
+    const threadBodyLength = (thread.body || '').trim().length;
+    const totalPostContent = posts.reduce((total, post) => total + (post.body || '').trim().length, 0);
+    const totalContentLength = threadBodyLength + totalPostContent;
+
+    // Only use fallback for truly minimal content (less than 50 characters total)
+    if (totalContentLength < 50) {
       const contributorCount = new Set(posts.map(p => p.user?.username || 'Unknown User')).size;
       return {
         success: true,

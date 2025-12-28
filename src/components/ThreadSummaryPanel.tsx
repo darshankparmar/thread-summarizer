@@ -11,6 +11,7 @@ interface ThreadSummaryPanelState {
   data: SummaryData | null;
   error: UserFriendlyError | null;
   retryCount: number;
+  hasGenerated: boolean;
 }
 
 const MAX_RETRY_ATTEMPTS = 3;
@@ -20,7 +21,8 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
     isLoading: false,
     data: null,
     error: null,
-    retryCount: 0
+    retryCount: 0,
+    hasGenerated: false
   });
 
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -107,7 +109,8 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
           ...prev, 
           isLoading: false, 
           data: summaryData, 
-          error: null 
+          error: null,
+          hasGenerated: true
         }));
         return; // Success - exit retry loop
 
@@ -122,7 +125,8 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
           setState(prev => ({ 
             ...prev, 
             isLoading: false, 
-            error: processedError 
+            error: processedError,
+            hasGenerated: true
           }));
           return;
         }
@@ -141,7 +145,8 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
-        error: processedError 
+        error: processedError,
+        hasGenerated: true
       }));
     }
   };
@@ -154,7 +159,7 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
     setState(prev => ({ ...prev, error: null }));
   };
 
-  const { isLoading, data, error, retryCount } = state;
+  const { isLoading, data, error, retryCount, hasGenerated } = state;
 
   return (
     <div className={`thread-summary-panel bg-gray-50 border border-gray-200 rounded-lg p-4 ${className}`}>
@@ -167,7 +172,7 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
         >
           {isLoading ? (
             retryCount > 1 ? `Retrying... (${retryCount}/${MAX_RETRY_ATTEMPTS})` : 'Generating...'
-          ) : 'Generate Summary'}
+          ) : hasGenerated ? 'Re-generate Summary' : 'Generate Summary'}
         </button>
       </div>
 
@@ -187,21 +192,6 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
 
       {/* Summary Data Display - Text-based presentation without charts/graphs */}
       {data && <SummaryDisplay data={data} />}
-
-      {/* Fallback content when error has fallback data */}
-      {error && !data && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-          <h4 className="font-medium text-yellow-800 mb-2">Basic Thread Information</h4>
-          <div className="text-sm text-yellow-700">
-            <p>While we couldn&apos;t generate a full AI summary, here&apos;s what we know:</p>
-            <ul className="mt-2 space-y-1">
-              <li>• Thread ID: {threadId}</li>
-              <li>• Status: Analysis unavailable</li>
-              <li>• You can try again once the issue is resolved</li>
-            </ul>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

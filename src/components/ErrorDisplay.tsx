@@ -128,35 +128,6 @@ export default function ErrorDisplay({
             )}
           </button>
         )}
-
-        {(showTechnicalDetails || error.technicalDetails) && (
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 transition-colors"
-          >
-            {showDetails ? 'Hide Details' : 'Show Details'}
-          </button>
-        )}
-      </div>
-
-      {/* Technical Details */}
-      {showDetails && error.technicalDetails && (
-        <div className="border-t border-gray-200 pt-4">
-          <h4 className="font-medium text-gray-900 mb-2">Technical Details:</h4>
-          <div className="bg-gray-100 rounded p-3 text-sm font-mono text-gray-800 overflow-x-auto">
-            {error.technicalDetails}
-          </div>
-        </div>
-      )}
-
-      {/* Category Badge */}
-      <div className="flex justify-between items-center text-xs text-gray-500 mt-4 pt-4 border-t border-gray-200">
-        <span>Error Category: {error.category}</span>
-        {error.actionable && (
-          <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-            Actionable
-          </span>
-        )}
       </div>
     </div>
   );

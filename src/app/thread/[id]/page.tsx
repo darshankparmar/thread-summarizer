@@ -7,7 +7,7 @@ import ThreadSummaryPanel from '@/components/ThreadSummaryPanel';
 import Avatar from '@/components/Avatar';
 import ThreadTags from '@/components/ThreadTags';
 import ThreadStatus from '@/components/ThreadStatus';
-import PostEngagement from '@/components/PostEngagement';
+import PostCard from '@/components/PostCard';
 
 interface ThreadPageState {
   thread: ForumsThread | null;
@@ -238,12 +238,12 @@ export default function ThreadPage() {
                 </div>
                 <span className="hidden sm:inline mx-2">•</span>
                 <span>{new Date(thread.createdAt).toLocaleString()}</span>
-                {thread.updatedAt && thread.updatedAt !== thread.createdAt && (
+                {/* {thread.updatedAt && thread.updatedAt !== thread.createdAt && (
                   <>
                     <span className="hidden sm:inline mx-2">•</span>
                     <span className="text-gray-400">Updated {new Date(thread.updatedAt).toLocaleString()}</span>
                   </>
-                )}
+                )} */}
               </div>
 
               {/* Thread Stats */}
@@ -282,78 +282,31 @@ export default function ThreadPage() {
               />
             </div>
 
-            {/* Thread Posts */}
-            <div className="space-y-4">
-          {posts.map((post, index) => (
-            <div 
-              key={post.id} 
-              className={`bg-white rounded-lg shadow-sm border p-4 sm:p-6 ${
-                post.bestAnswer 
-                  ? 'border-green-200 bg-green-50' 
-                  : 'border-gray-200'
-              }`}
-            >
-              {/* Best Answer Badge */}
-              {post.bestAnswer && (
-                <div className="flex items-center mb-3">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Best Answer
-                  </span>
-                </div>
-              )}
-
-              {/* Post Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
-                <div className="flex items-center text-sm text-gray-500">
-                  {/* User Avatar and Info */}
-                  <div className="flex items-center">
-                    <Avatar 
-                      src={post.user?.avatar} 
-                      username={post.user?.username || 'Unknown User'} 
-                      size="md" 
-                      className="mr-3" 
-                    />
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-900">{post.user?.displayName || post.user?.username || 'Unknown User'}</span>
-                      <div className="flex items-center text-xs text-gray-400">
-                        <span>Reply #{index + 1}</span>
-                        <span className="mx-1">•</span>
-                        <span>{new Date(post.createdAt).toLocaleString()}</span>
-                        {post.updatedAt && post.updatedAt !== post.createdAt && (
-                          <>
-                            <span className="mx-1">•</span>
-                            <span className="italic">edited {new Date(post.updatedAt).toLocaleString()}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Post Engagement */}
-                <PostEngagement likes={post.likes} upvotes={post.upvotes} />
+            {/* Thread Posts Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Discussion ({posts.length} {posts.length === 1 ? 'reply' : 'replies'})
+              </h3>
+              <div className="text-sm text-gray-500 flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                Newest first
               </div>
-
-              {/* Post Content */}
-              <div className="prose max-w-none">
-                <p className="text-gray-700 whitespace-pre-wrap">{post.body}</p>
-              </div>
-
-              {/* Nested Replies Indicator */}
-              {post.parentId && (
-                <div className="mt-3 text-xs text-gray-500 italic">
-                  <svg className="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0L3 11.414V13a1 1 0 11-2 0V9a1 1 0 011-1h4a1 1 0 110 2H4.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
-                  </svg>
-                  Reply to previous post
-                </div>
-              )}
             </div>
-          ))}
-        </div>
+
+            {/* Thread Posts - Show latest first */}
+            <div className="space-y-4">
+              {posts
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .map((post, index) => (
+                  <PostCard 
+                    key={post.id} 
+                    post={post} 
+                    isLatest={index === 0}
+                  />
+                ))}
+            </div>
 
             {/* Empty state for threads with no posts */}
             {posts.length === 0 && (
