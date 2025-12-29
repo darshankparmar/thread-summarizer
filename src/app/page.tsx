@@ -174,7 +174,7 @@ export default function Home() {
                         size="sm" 
                         className="mr-3" 
                       />
-                      <span>by {thread.user.displayName || thread.user.username}</span>
+                      <span>by @{thread.user.username}</span>
                       <span className="mx-2 text-secondary">•</span>
                       <span>{`Created ${new Date(thread.createdAt).toLocaleString()}`}</span>
                     </div>

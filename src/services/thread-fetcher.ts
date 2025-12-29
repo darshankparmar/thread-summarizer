@@ -1,5 +1,5 @@
 import { ForumsThread, ForumsPost, FallbackData } from '@/types';
-import { ForumsApiClient, ForumsApiError, createForumsApiClient } from './forums-api';
+import { ForumsApiClient, ApiError, createForumsApiClient } from './api';
 
 /**
  * Complete thread data with metadata and posts
@@ -48,7 +48,7 @@ export class ThreadFetcherService {
       }
 
       // Fetch complete thread data
-      const { thread, posts } = await this.apiClient.fetchCompleteThread(threadId);
+      const { thread, posts } = await this.apiClient.getCompleteThread(threadId);
 
       // Calculate derived data
       const lastPostTimestamp = this.calculateLastPostTimestamp(thread, posts);
@@ -68,7 +68,7 @@ export class ThreadFetcherService {
       };
 
     } catch (error) {
-      if (error instanceof ForumsApiError) {
+      if (error instanceof ApiError) {
         return this.handleApiError(error, threadId);
       }
 
@@ -85,7 +85,7 @@ export class ThreadFetcherService {
    * Handle specific API errors with appropriate user-facing messages
    * @private
    */
-  private handleApiError(error: ForumsApiError, threadId: string): ThreadFetchResult {
+  private handleApiError(error: ApiError, threadId: string): ThreadFetchResult {
     switch (error.statusCode) {
       case 401:
         return {

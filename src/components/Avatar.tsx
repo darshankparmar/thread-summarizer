@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -20,6 +21,25 @@ const sizePx = {
   lg: 48
 };
 
+const COLORS = [
+  "bg-red-500",
+  "bg-orange-500",
+  "bg-amber-500",
+  "bg-green-500",
+  "bg-emerald-500",
+  "bg-teal-500",
+  "bg-blue-500",
+  "bg-indigo-500",
+  "bg-purple-500",
+  "bg-pink-500",
+];
+
+const getColorFromName = (name?: string) => {
+  if (!name) return COLORS[0];
+  const charCode = name.charCodeAt(0);
+  return COLORS[charCode % COLORS.length];
+};
+
 export default function Avatar({ src, username, size = 'md', className = '' }: AvatarProps) {
   const [imageError, setImageError] = useState(false);
   const sizeClass = sizeClasses[size];
@@ -28,8 +48,15 @@ export default function Avatar({ src, username, size = 'md', className = '' }: A
   // If no src provided or image failed to load, show fallback
   if (!src || imageError) {
     return (
-      <div className={`${sizeClass} rounded-full bg-indigo-500 flex items-center justify-center text-white font-medium ${className}`}>
-        {username.charAt(0).toUpperCase()}
+      <div
+        className={cn(
+          "flex items-center justify-center rounded-full font-medium text-white",
+          getColorFromName(username),
+          sizeClass,
+          className
+        )}
+      >
+        {(username?.[0] || "?").toUpperCase()}
       </div>
     );
   }

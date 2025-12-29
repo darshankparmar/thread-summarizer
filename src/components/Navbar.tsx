@@ -71,7 +71,7 @@ export default function Navbar() {
                   />
                   <div className="text-sm">
                     <p className="text-text-primary font-medium">
-                      {userInfo.displayName}
+                      {userInfo.displayName || userInfo.username}
                     </p>
                     <p className="text-text-secondary text-xs capitalize">
                       {userInfo.primaryRole}

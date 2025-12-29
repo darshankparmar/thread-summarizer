@@ -1,6 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { authService } from '@/services/auth-service';
+import { authService } from '@/services/auth';
 
 /**
  * NextAuth configuration for Foru.ms integration

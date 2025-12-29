@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Avatar from '@/components/Avatar';
+import { ForumsRole } from '@/types';
 
 interface DashboardStats {
   summariesGenerated: number;
@@ -180,7 +181,13 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-text-primary">
-                {(session.user as { roles?: string[] })?.roles?.includes('admin') ? 'Admin' : 'User'}
+                {(() => {
+                  const roles = (session.user as { roles?: (string | ForumsRole)[] })?.roles || [];
+                  const hasAdminRole = roles.some(role => 
+                    typeof role === 'string' ? role === 'admin' : role.name === 'admin'
+                  );
+                  return hasAdminRole ? 'Admin' : 'User';
+                })()}
               </div>
               <p className="text-xs text-text-secondary mt-1">
                 Access level

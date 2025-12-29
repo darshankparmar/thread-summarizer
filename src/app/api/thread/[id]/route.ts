@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { forumsApi, ForumsApiError } from '@/services/forums-api';
+import { forumsApiClient, ApiError } from '@/services/api';
 
 export async function GET(
   request: NextRequest,
@@ -16,7 +16,7 @@ export async function GET(
     }
 
     // Fetch complete thread data (thread metadata + posts)
-    const { thread, posts } = await forumsApi.fetchCompleteThread(threadId);
+    const { thread, posts } = await forumsApiClient.getCompleteThread(threadId);
 
     return NextResponse.json({
       success: true,
@@ -28,7 +28,7 @@ export async function GET(
   } catch (error) {
     console.error('Thread fetch error:', error);
 
-    if (error instanceof ForumsApiError) {
+    if (error instanceof ApiError) {
       // Map specific API errors to appropriate HTTP status codes
       let statusCode = 500;
       if (error.statusCode === 404) {

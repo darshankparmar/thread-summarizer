@@ -234,7 +234,7 @@ export default function ThreadPage() {
                     size="sm" 
                     className="mr-2" 
                   />
-                  <span>Started by {thread.user.displayName || thread.user.username}</span>
+                  <span>Started by @{thread.user.username}</span>
                 </div>
                 <span className="hidden sm:inline mx-2">•</span>
                 <span>{new Date(thread.createdAt).toLocaleString()}</span>
@@ -293,11 +293,10 @@ export default function ThreadPage() {
             <div className="space-y-4">
               {posts
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                .map((post, index) => (
+                .map((post) => (
                   <PostCard 
                     key={post.id} 
                     post={post} 
-                    isLatest={index === 0}
                   />
                 ))}
             </div>

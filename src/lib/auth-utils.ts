@@ -1,4 +1,5 @@
 import { Session } from 'next-auth';
+import { ForumsRole } from '@/types';
 
 /**
  * Utility functions for authentication and authorization
@@ -10,8 +11,12 @@ import { Session } from 'next-auth';
 export function hasRole(session: Session | null, role: string): boolean {
   if (!session?.user) return false;
   
-  const userRoles = (session.user as { roles?: string[] }).roles;
-  return userRoles?.includes(role) || false;
+  const userRoles = (session.user as { roles?: (string | ForumsRole)[] }).roles;
+  if (!userRoles) return false;
+  
+  return userRoles.some(userRole => 
+    typeof userRole === 'string' ? userRole === role : userRole.name === role
+  );
 }
 
 /**
@@ -34,10 +39,14 @@ export function isModerator(session: Session | null): boolean {
 export function hasAnyRole(session: Session | null, roles: string[]): boolean {
   if (!session?.user) return false;
   
-  const userRoles = (session.user as { roles?: string[] }).roles;
+  const userRoles = (session.user as { roles?: (string | ForumsRole)[] }).roles;
   if (!userRoles) return false;
   
-  return roles.some(role => userRoles.includes(role));
+  return roles.some(role => 
+    userRoles.some(userRole => 
+      typeof userRole === 'string' ? userRole === role : userRole.name === role
+    )
+  );
 }
 
 /**
@@ -46,19 +55,24 @@ export function hasAnyRole(session: Session | null, roles: string[]): boolean {
 export function getPrimaryRole(session: Session | null): string {
   if (!session?.user) return 'guest';
   
-  const userRoles = (session.user as { roles?: string[] }).roles;
+  const userRoles = (session.user as { roles?: (string | ForumsRole)[] }).roles;
   if (!userRoles || userRoles.length === 0) return 'user';
+  
+  // Convert role objects to strings
+  const roleNames = userRoles.map(role => 
+    typeof role === 'string' ? role : role.name
+  );
   
   // Role hierarchy (highest to lowest priority)
   const roleHierarchy = ['admin', 'moderator', 'premium', 'user'];
   
   for (const role of roleHierarchy) {
-    if (userRoles.includes(role)) {
+    if (roleNames.includes(role)) {
       return role;
     }
   }
   
-  return userRoles[0]; // Return first role if none match hierarchy
+  return roleNames[0]; // Return first role if none match hierarchy
 }
 
 /**
@@ -135,8 +149,13 @@ export function getForumsToken(session: Session | null): string | null {
 /**
  * Format user roles for display
  */
-export function formatRoles(roles: string[] | undefined): string {
+export function formatRoles(roles: (string | ForumsRole)[] | undefined): string {
   if (!roles || roles.length === 0) return 'User';
+  
+  // Convert role objects to strings
+  const roleNames = roles.map(role => 
+    typeof role === 'string' ? role : role.name
+  );
   
   const roleDisplayNames: Record<string, string> = {
     admin: 'Administrator',
@@ -145,7 +164,7 @@ export function formatRoles(roles: string[] | undefined): string {
     user: 'User'
   };
   
-  const displayRoles = roles.map(role => roleDisplayNames[role] || role);
+  const displayRoles = roleNames.map(role => roleDisplayNames[role] || role);
   
   if (displayRoles.length === 1) {
     return displayRoles[0];

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,33 @@ export default function SignUp() {
   const [success, setSuccess] = useState(false);
   
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      router.push('/');
+      router.refresh();
+    }
+  }, [status, session, router]);
+
+  // Show loading while checking authentication status
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Don't render the form if user is authenticated (will redirect)
+  if (status === 'authenticated') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,7 +209,7 @@ export default function SignUp() {
 
                 <div>
                   <label htmlFor="displayName" className="block text-sm font-medium text-text-primary mb-2">
-                    Display Name
+                    Full Name
                   </label>
                   <Input
                     id="displayName"
@@ -189,13 +217,10 @@ export default function SignUp() {
                     type="text"
                     value={formData.displayName}
                     onChange={handleInputChange}
-                    placeholder="Your display name (optional)"
+                    placeholder="Your full name (optional)"
                     disabled={loading}
                     className="w-full"
                   />
-                  <p className="text-xs text-text-secondary mt-1">
-                    Optional - how others will see your name
-                  </p>
                 </div>
 
                 <div>

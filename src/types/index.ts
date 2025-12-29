@@ -9,11 +9,22 @@ export interface ForumsUser {
   emailVerified?: boolean;
   image?: string;
   avatar?: string; // Used in thread user object
-  roles?: string[];
+  roles?: (string | ForumsRole)[];
   bio?: string;
   signature?: string;
   url?: string;
   extendedData?: Record<string, unknown>;
+}
+
+export interface ForumsRole {
+  id: string;
+  name: string;
+  description?: string | null;
+  color?: string | null;
+  extendedData?: Record<string, unknown> | null;
+  instanceId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ForumsTag {
@@ -161,6 +172,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   user?: AuthUser;
+  token?: string;
   error?: string;
 }
 
@@ -174,6 +186,24 @@ export interface RegisterRequest {
 export interface RegisterResponse {
   success: boolean;
   user?: ForumsUser;
+  error?: string;
+}
+
+// Enhanced authentication types
+export interface AuthenticationState {
+  isAuthenticated: boolean;
+  user: AuthUser | null;
+  token: string | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface PasswordResetRequest {
+  email: string;
+}
+
+export interface PasswordResetResponse {
+  success: boolean;
   error?: string;
 }
 

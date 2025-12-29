@@ -59,7 +59,8 @@ describe('UI Constraints Property Tests', () => {
           'Positive': '😊',
           'Neutral': '😐', 
           'Mixed': '🤔',
-          'Negative': '😠'
+          'Negative': '😠',
+          'No Discussion': '😐'
         };
         
         expect(emoji).toBe(expectedEmojis[sentiment]);

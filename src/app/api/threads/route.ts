@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ForumsApiError, forumsApi } from '@/services/forums-api';
+import { ApiError, forumsApiClient } from '@/services/api';
 
 /**
  * GET /api/threads - Fetch available threads from Foru.ms API
@@ -7,11 +7,11 @@ import { ForumsApiError, forumsApi } from '@/services/forums-api';
 export async function GET() {
   try {
     // Use the service layer to fetch threads
-    const result = await forumsApi.fetchThreads({ limit: 10 });
+    const result = await forumsApiClient.threads.getThreads({ limit: 10 });
     
     return NextResponse.json({
       success: true,
-      threads: result.threads,
+      threads: result.data,
       count: result.count,
       nextCursor: result.nextCursor
     });
@@ -19,7 +19,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching threads:', error);
 
-    if (error instanceof ForumsApiError) {
+    if (error instanceof ApiError) {
       return NextResponse.json(
         {
           success: false,
