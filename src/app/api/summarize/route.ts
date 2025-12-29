@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth-config';
 import { threadFetcher } from '@/services/thread-fetcher';
 import { aiService } from '@/services/ai-service';
 import { cacheManager } from '@/services/cache-manager';
@@ -25,6 +27,22 @@ async function handleSummarizeRequest(request: NextRequest): Promise<NextRespons
   const startTime = Date.now();
   
   try {
+    // Check authentication - AI features require login
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return NextResponse.json({
+        success: false,
+        error: 'Authentication required. Please sign in to use AI features.',
+        cached: false,
+        generatedAt: new Date().toISOString()
+      }, { 
+        status: 401,
+        headers: {
+          'WWW-Authenticate': 'Bearer',
+          'X-Auth-Required': 'true'
+        }
+      });
+    }
     // Parse and validate request body
     const body: SummarizeRequest = await request.json();
     

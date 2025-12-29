@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import SessionProvider from "@/components/SessionProvider";
 import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
@@ -39,12 +40,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider>
-          <Navbar />
-          <main>
-            {children}
-          </main>
-        </ThemeProvider>
+        <SessionProvider>
+          <ThemeProvider>
+            <Navbar />
+            <main>
+              {children}
+            </main>
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   );

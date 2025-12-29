@@ -8,9 +8,9 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: "bg-surface text-text-primary border-secondary/20",
-        destructive: "border-red-200/50 text-red-800 dark:border-red-400/30 dark:text-red-200 [&>svg]:text-red-600 dark:[&>svg]:text-red-400 bg-red-50/50 dark:bg-red-900/20",
-        warning: "border-yellow-200/50 text-yellow-800 dark:border-yellow-400/30 dark:text-yellow-200 [&>svg]:text-yellow-600 dark:[&>svg]:text-yellow-400 bg-yellow-50/50 dark:bg-yellow-900/20",
-        success: "border-green-200/50 text-green-800 dark:border-green-400/30 dark:text-green-200 [&>svg]:text-green-600 dark:[&>svg]:text-green-400 bg-green-50/50 dark:bg-green-900/20",
+        destructive: "border-red-200/50 text-red-800 dark:border-red-400/30 dark:text-red-700 [&>svg]:text-red-600 dark:[&>svg]:text-red-400 bg-red-50/50 dark:bg-red-900/20",
+        warning: "border-yellow-200/50 text-yellow-800 dark:border-yellow-400/30 dark:text-yellow-700 [&>svg]:text-yellow-600 dark:[&>svg]:text-yellow-400 bg-yellow-50/50 dark:bg-yellow-900/20",
+        success: "border-green-200/50 text-green-800 dark:border-green-400/30 dark:text-green-700 [&>svg]:text-green-600 dark:[&>svg]:text-green-400 bg-green-50/50 dark:bg-green-900/20",
       },
     },
     defaultVariants: {

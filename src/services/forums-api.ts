@@ -1,4 +1,4 @@
-import { ForumsThread, ForumsPost } from '@/types';
+import { ForumsThread, ForumsPost, ForumsUser } from '@/types';
 
 /**
  * Configuration for Foru.ms API client
@@ -36,20 +36,54 @@ export class ForumsApiClient {
    * Common method to make API requests with consistent error handling
    * @private
    */
-  private async makeApiRequest(endpoint: string, timeout: number = 10000): Promise<unknown> {
-    const response = await fetch(`${this.config.baseUrl}${endpoint}`, {
-      method: 'GET',
-      headers: {
-        'x-api-key': this.config.apiKey,
-        'Content-Type': 'application/json',
-        'User-Agent': 'ThreadSummarizer/1.0'
-      },
+  private async makeApiRequest(
+    endpoint: string, 
+    options: {
+      method?: string;
+      body?: unknown;
+      headers?: Record<string, string>;
+      timeout?: number;
+      useApiKey?: boolean;
+      bearerToken?: string;
+    } = {}
+  ): Promise<unknown> {
+    const {
+      method = 'GET',
+      body,
+      headers: customHeaders = {},
+      timeout = 10000,
+      useApiKey = true,
+      bearerToken
+    } = options;
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'ThreadSummarizer/1.0',
+      ...customHeaders
+    };
+
+    // Add authentication headers
+    if (bearerToken) {
+      headers['Authorization'] = `Bearer ${bearerToken}`;
+    } else if (useApiKey) {
+      headers['x-api-key'] = this.config.apiKey;
+    }
+
+    const requestOptions: RequestInit = {
+      method,
+      headers,
       signal: AbortSignal.timeout(timeout)
-    });
+    };
+
+    if (body && method !== 'GET') {
+      requestOptions.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(`${this.config.baseUrl}${endpoint}`, requestOptions);
 
     if (!response.ok) {
       if (response.status === 401) {
-        throw new ForumsApiError('Authentication failed - invalid API key', 401);
+        throw new ForumsApiError('Authentication failed - invalid credentials', 401);
       }
       if (response.status === 404) {
         throw new ForumsApiError(`Resource not found: ${endpoint}`, 404);
@@ -64,6 +98,171 @@ export class ForumsApiClient {
     }
 
     return response.json();
+  }
+
+  /**
+   * Authenticate user with Foru.ms API
+   * @param login - Username or email
+   * @param password - User password
+   * @returns Promise<{user: ForumsUser, token: string}> - User data and JWT token
+   * @throws ForumsApiError - When authentication fails
+   */
+  async authenticateUser(login: string, password: string): Promise<{user: ForumsUser, token: string}> {
+    if (!login || !password) {
+      throw new ForumsApiError('Login and password are required');
+    }
+
+    try {
+      // Step 1: Login to get JWT token
+      const loginData = await this.makeApiRequest('/api/v1/auth/login', {
+        method: 'POST',
+        body: { login, password },
+        useApiKey: true,
+        timeout: 15000
+      }) as { token: string };
+
+      // Step 2: Get user information using the JWT token
+      const userData = await this.makeApiRequest('/api/v1/auth/me', {
+        method: 'GET',
+        bearerToken: loginData.token,
+        useApiKey: false,
+        timeout: 10000
+      }) as ForumsUser;
+
+      // Validate user data structure
+      if (!this.isValidUser(userData)) {
+        throw new ForumsApiError('Invalid user data received from API');
+      }
+
+      return {
+        user: userData,
+        token: loginData.token
+      };
+    } catch (error) {
+      if (error instanceof ForumsApiError) {
+        // Customize error messages for authentication
+        if (error.statusCode === 401) {
+          throw new ForumsApiError('Invalid username/email or password', 401);
+        }
+        throw error;
+      }
+      
+      // Handle network errors
+      if (error instanceof TypeError) {
+        throw new ForumsApiError('Network error - unable to connect to Foru.ms API', undefined, error as Error);
+      }
+      
+      // Handle timeout errors
+      if (error instanceof DOMException && error.name === 'TimeoutError') {
+        throw new ForumsApiError('Request timeout - Foru.ms API did not respond in time', undefined, error as Error);
+      }
+      
+      throw new ForumsApiError('Authentication failed', undefined, error as Error);
+    }
+  }
+
+  /**
+   * Register new user with Foru.ms API
+   * @param userData - User registration data
+   * @returns Promise<ForumsUser> - Created user data
+   * @throws ForumsApiError - When registration fails
+   */
+  async registerUser(userData: {
+    username: string;
+    email: string;
+    password: string;
+    displayName?: string;
+    emailVerified?: boolean;
+    roles?: string[];
+    extendedData?: Record<string, unknown>;
+  }): Promise<ForumsUser> {
+    if (!userData.username || !userData.email || !userData.password) {
+      throw new ForumsApiError('Username, email, and password are required');
+    }
+
+    try {
+      const createdUser = await this.makeApiRequest('/api/v1/auth/register', {
+        method: 'POST',
+        body: userData,
+        useApiKey: false, // Don't use API key for registration
+        timeout: 15000
+      }) as ForumsUser;
+
+      // Validate user data structure
+      if (!this.isValidUser(createdUser)) {
+        throw new ForumsApiError('Invalid user data received from API');
+      }
+
+      return createdUser;
+    } catch (error) {
+      if (error instanceof ForumsApiError) {
+        // Customize error messages for registration
+        if (error.statusCode === 400) {
+          throw new ForumsApiError('Registration failed - invalid data or user already exists', 400);
+        }
+        throw error;
+      }
+      
+      // Handle network errors
+      if (error instanceof TypeError) {
+        throw new ForumsApiError('Network error - unable to connect to Foru.ms API', undefined, error as Error);
+      }
+      
+      // Handle timeout errors
+      if (error instanceof DOMException && error.name === 'TimeoutError') {
+        throw new ForumsApiError('Request timeout - Foru.ms API did not respond in time', undefined, error as Error);
+      }
+      
+      throw new ForumsApiError('Registration failed', undefined, error as Error);
+    }
+  }
+
+  /**
+   * Get user information using JWT token
+   * @param token - JWT token from login
+   * @returns Promise<ForumsUser> - User data
+   * @throws ForumsApiError - When request fails
+   */
+  async getUserInfo(token: string): Promise<ForumsUser> {
+    if (!token) {
+      throw new ForumsApiError('JWT token is required');
+    }
+
+    try {
+      const userData = await this.makeApiRequest('/api/v1/auth/me', {
+        method: 'GET',
+        bearerToken: token,
+        useApiKey: false,
+        timeout: 10000
+      }) as ForumsUser;
+
+      // Validate user data structure
+      if (!this.isValidUser(userData)) {
+        throw new ForumsApiError('Invalid user data received from API');
+      }
+
+      return userData;
+    } catch (error) {
+      if (error instanceof ForumsApiError) {
+        // Customize error messages for user info
+        if (error.statusCode === 401) {
+          throw new ForumsApiError('Invalid or expired token', 401);
+        }
+        throw error;
+      }
+      
+      // Handle network errors
+      if (error instanceof TypeError) {
+        throw new ForumsApiError('Network error - unable to connect to Foru.ms API', undefined, error as Error);
+      }
+      
+      // Handle timeout errors
+      if (error instanceof DOMException && error.name === 'TimeoutError') {
+        throw new ForumsApiError('Request timeout - Foru.ms API did not respond in time', undefined, error as Error);
+      }
+      
+      throw new ForumsApiError('Failed to get user information', undefined, error as Error);
+    }
   }
 
   /**
@@ -189,7 +388,7 @@ export class ForumsApiClient {
     }
 
     try {
-      const data = await this.makeApiRequest(`/api/v1/thread/${threadId}/posts`, 15000);
+      const data = await this.makeApiRequest(`/api/v1/thread/${threadId}/posts`, { timeout: 15000 });
       
       // Type guard for the response data
       const responseData = data as { posts?: ForumsPost[] } | ForumsPost[];
@@ -248,6 +447,25 @@ export class ForumsApiClient {
       }
       throw new ForumsApiError('Failed to fetch complete thread data', undefined, error as Error);
     }
+  }
+
+  /**
+   * Validate user data structure
+   * @private
+   */
+  private isValidUser(data: unknown): data is ForumsUser {
+    if (!data || typeof data !== 'object') return false;
+    
+    const user = data as Record<string, unknown>;
+    return (
+      typeof user.id === 'string' &&
+      typeof user.username === 'string' &&
+      (user.email === undefined || typeof user.email === 'string') &&
+      (user.displayName === undefined || typeof user.displayName === 'string') &&
+      (user.emailVerified === undefined || typeof user.emailVerified === 'boolean') &&
+      (user.image === undefined || typeof user.image === 'string') &&
+      (user.roles === undefined || Array.isArray(user.roles))
+    );
   }
 
   /**

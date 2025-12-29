@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { SummaryData, ThreadSummaryPanelProps } from '../types';
 import { SummaryDisplay, LoadingDisplay, getHealthLabel } from './SummaryDataFormatter';
 import ErrorDisplay from './ErrorDisplay';
 import { errorHandler, UserFriendlyError } from '@/services/error-handler';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Alert, AlertDescription } from './ui/alert';
 
 interface ThreadSummaryPanelState {
   isLoading: boolean;
@@ -19,6 +21,7 @@ interface ThreadSummaryPanelState {
 const MAX_RETRY_ATTEMPTS = 3;
 
 export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadSummaryPanelProps) {
+  const { data: session, status } = useSession();
   const [state, setState] = useState<ThreadSummaryPanelState>({
     isLoading: false,
     data: null,
@@ -47,7 +50,9 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
 
       if (!response.ok) {
         // Handle specific HTTP status codes
-        if (response.status === 429) {
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please sign in to use AI features.');
+        } else if (response.status === 429) {
           throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
         } else if (response.status === 404) {
           throw new Error('Thread not found. Please check the thread ID.');
@@ -162,6 +167,46 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
   };
 
   const { isLoading, data, error, retryCount, hasGenerated } = state;
+
+  // Show authentication required message if not signed in
+  if (status !== 'loading' && !session) {
+    return (
+      <Card className={`thread-summary-panel ${className}`}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <span className="text-2xl">🔐</span>
+            AI Thread Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert>
+            <AlertDescription className="text-center py-6">
+              <div className="text-4xl mb-4">🤖</div>
+              <h3 className="font-semibold text-text-primary mb-2">
+                Sign In Required
+              </h3>
+              <p className="text-text-secondary mb-4">
+                AI-powered thread analysis requires authentication. Sign in to unlock intelligent summaries, sentiment analysis, and key insights.
+              </p>
+              <div className="flex gap-2 justify-center">
+                <Button 
+                  onClick={() => window.location.href = `/auth/signin?callbackUrl=${encodeURIComponent(window.location.pathname)}`}
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  onClick={() => window.location.href = '/auth/signup'}
+                  variant="outline"
+                >
+                  Create Account
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={`thread-summary-panel ${className}`}>

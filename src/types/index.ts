@@ -141,6 +141,42 @@ export interface CacheKey {
   lastPostTimestamp: string;
 }
 
+// Authentication types
+export interface AuthUser {
+  id: string;
+  username: string;
+  email?: string;
+  name?: string;
+  image?: string;
+  emailVerified?: boolean;
+  roles?: string[];
+  forumsToken?: string;
+}
+
+export interface LoginRequest {
+  login: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  user?: AuthUser;
+  error?: string;
+}
+
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  displayName?: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  user?: ForumsUser;
+  error?: string;
+}
+
 // Component prop types
 export interface ThreadSummaryPanelProps {
   threadId: string;
