@@ -8,6 +8,9 @@ import Avatar from '@/components/Avatar';
 import ThreadTags from '@/components/ThreadTags';
 import ThreadStatus from '@/components/ThreadStatus';
 import PostCard from '@/components/PostCard';
+import PostEngagement from '@/components/PostEngagement';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ThreadPageState {
   thread: ForumsThread | null;
@@ -16,6 +19,8 @@ interface ThreadPageState {
   error: string | null;
   retryCount: number;
 }
+
+type SortOption = 'newest' | 'oldest' | 'popular';
 
 const MAX_RETRY_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 1000;
@@ -31,6 +36,9 @@ export default function ThreadPage() {
     error: null,
     retryCount: 0
   });
+
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [showRepliesFor, setShowRepliesFor] = useState<Set<string>>(new Set());
 
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -132,6 +140,49 @@ export default function ThreadPage() {
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { thread, posts, isLoading, error, retryCount } = state;
+
+  // Organize posts into threads (parent posts and their replies)
+  const organizedPosts = () => {
+    const parentPosts = posts.filter(post => !post.parentId);
+    const childPosts = posts.filter(post => post.parentId);
+    
+    return parentPosts.map(parent => ({
+      parent,
+      replies: childPosts.filter(child => child.parentId === parent.id)
+    }));
+  };
+
+  // Sort posts based on selected option
+  const sortedPosts = () => {
+    const organized = organizedPosts();
+    
+    return organized.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.parent.createdAt).getTime() - new Date(a.parent.createdAt).getTime();
+        case 'oldest':
+          return new Date(a.parent.createdAt).getTime() - new Date(b.parent.createdAt).getTime();
+        case 'popular':
+          const aLikes = (a.parent.likes?.length || 0) + (a.parent.upvotes?.length || 0);
+          const bLikes = (b.parent.likes?.length || 0) + (b.parent.upvotes?.length || 0);
+          return bLikes - aLikes;
+        default:
+          return 0;
+      }
+    });
+  };
+
+  const toggleReplies = (postId: string) => {
+    setShowRepliesFor(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(postId)) {
+        newSet.delete(postId);
+      } else {
+        newSet.add(postId);
+      }
+      return newSet;
+    });
+  };
 
   if (isLoading) {
     return (
@@ -263,9 +314,16 @@ export default function ThreadPage() {
                 </div>
               </div>
               
-              <div className="prose max-w-none">
+              <div className="prose max-w-none mb-4">
                 <p className="text-text-secondary whitespace-pre-wrap">{thread.body}</p>
               </div>
+
+              {/* Thread Engagement */}
+              <PostEngagement 
+                likes={thread.likes || []}
+                upvotes={thread.upvotes || []}
+                className="border-t border-secondary/20 pt-4"
+              />
             </div>
 
             {/* Mobile AI Summary - Show only on mobile */}
@@ -276,35 +334,95 @@ export default function ThreadPage() {
               />
             </div>
 
-            {/* Thread Posts Header */}
-            <div className="flex items-center justify-between mb-4">
+            {/* Thread Posts Header with Sort Options */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
               <h3 className="text-lg font-semibold text-text-primary">
                 Discussion ({posts.length} {posts.length === 1 ? 'reply' : 'replies'})
               </h3>
-              <div className="text-sm text-text-secondary flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                </svg>
-                Newest first
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-text-secondary">Sort by:</span>
+                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Newest</SelectItem>
+                      <SelectItem value="oldest">Oldest</SelectItem>
+                      <SelectItem value="popular">Most Popular</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            {/* Thread Posts - Show latest first */}
-            <div className="space-y-4">
-              {posts
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                .map((post) => (
-                  <PostCard 
-                    key={post.id} 
-                    post={post} 
-                  />
-                ))}
+            {/* Thread Posts with Threading */}
+            <div className="space-y-6">
+              {sortedPosts().map(({ parent, replies }) => (
+                <div key={parent.id} className="space-y-4">
+                  {/* Parent Post */}
+                  <div className="bg-surface rounded-lg shadow-sm border border-secondary/20">
+                    <PostCard 
+                      post={parent} 
+                      showReplyButton={true}
+                      onReply={(postId) => console.log('Reply to:', postId)}
+                    />
+                    
+                    {/* Reply Actions */}
+                    {replies.length > 0 && (
+                      <div className="px-4 pb-4 border-t border-secondary/20">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleReplies(parent.id)}
+                          className="text-text-secondary hover:text-text-primary"
+                        >
+                          <svg className={`w-4 h-4 mr-2 transition-transform ${showRepliesFor.has(parent.id) ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                          {showRepliesFor.has(parent.id) ? 'Hide' : 'Show'} {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Replies */}
+                  {showRepliesFor.has(parent.id) && replies.length > 0 && (
+                    <div className="ml-8 space-y-4">
+                      {replies
+                        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                        .map((reply) => (
+                          <div key={reply.id} className="relative">
+                            {/* Reply indicator line */}
+                            <div className="absolute -left-8 top-0 bottom-0 w-0.5 bg-primary/30"></div>
+                            <div className="absolute -left-8 top-6 w-6 h-0.5 bg-primary/30"></div>
+                            
+                            <PostCard 
+                              post={reply} 
+                              isReply={true}
+                              showReplyButton={true}
+                              onReply={(postId) => console.log('Reply to:', postId)}
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
 
             {/* Empty state for threads with no posts */}
             {posts.length === 0 && (
-              <div className="bg-surface rounded-lg shadow-sm border border-secondary/20 p-6 text-center">
-                <p className="text-text-secondary">No replies yet. Be the first to respond!</p>
+              <div className="bg-surface rounded-lg shadow-sm border border-secondary/20 p-8 text-center">
+                <div className="text-4xl mb-4">💬</div>
+                <h3 className="text-lg font-medium text-text-primary mb-2">No replies yet</h3>
+                <p className="text-text-secondary mb-4">Be the first to join the conversation!</p>
+                <Button variant="outline">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Reply
+                </Button>
               </div>
             )}
           </div>

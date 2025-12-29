@@ -4,3 +4,13 @@ export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
 export { Badge, badgeVariants } from "./badge"
 export { Alert, AlertTitle, AlertDescription } from "./alert"
 export { Skeleton } from "./skeleton"
+export { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue,
+  SelectGroup,
+  SelectLabel,
+  SelectSeparator 
+} from "./select"

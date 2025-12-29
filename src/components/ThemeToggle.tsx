@@ -31,8 +31,8 @@ export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
       className={`
         relative inline-flex h-8 w-14 items-center rounded-full 
         transition-all duration-200 ease-in-out focus:outline-none 
-        focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 
-        focus:ring-offset-background hover:shadow-md
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 
+        focus-visible:ring-offset-background hover:shadow-md
         border shadow-sm
         ${theme === 'dark' 
           ? 'bg-orange-500 border-orange-400 hover:bg-orange-600' 

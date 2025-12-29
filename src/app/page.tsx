@@ -1,48 +1,212 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ForumsThread } from '@/types';
-import Avatar from '@/components/Avatar';
-import ThreadTags from '@/components/ThreadTags';
-import ThreadStatus from '@/components/ThreadStatus';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button, Input } from '@/components/ui';
+import SearchFilters, { SortOption, ViewMode, DateFilter, EngagementFilter } from '@/components/SearchFilters';
+import TagSelector from '@/components/TagSelector';
+import ThreadGrid from '@/components/ThreadGrid';
 
 interface ThreadsResponse {
   success: boolean;
   threads: ForumsThread[];
   count: number;
+  nextCursor?: string;
   error?: string;
 }
 
 export default function Home() {
   const [threads, setThreads] = useState<ForumsThread[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [nextCursor, setNextCursor] = useState<string | undefined>();
+  const [hasMore, setHasMore] = useState(true);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [authorFilter, setAuthorFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [engagementFilter, setEngagementFilter] = useState<EngagementFilter>('all');
+
+  // Get all unique tags from threads
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    threads.forEach(thread => {
+      thread.tags?.forEach(tag => tagSet.add(tag.name));
+    });
+    return Array.from(tagSet).sort();
+  }, [threads]);
+
+  // Filter and sort threads
+  const filteredAndSortedThreads = useMemo(() => {
+    let filtered = threads;
+
+    // Apply search filter (full-text search)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(thread => 
+        thread.title.toLowerCase().includes(query) ||
+        thread.body.toLowerCase().includes(query) ||
+        thread.user.username.toLowerCase().includes(query) ||
+        thread.tags?.some(tag => tag.name.toLowerCase().includes(query))
+      );
+    }
+
+    // Apply author filter
+    if (authorFilter.trim()) {
+      const author = authorFilter.toLowerCase();
+      filtered = filtered.filter(thread =>
+        thread.user.username.toLowerCase().includes(author)
+      );
+    }
+
+    // Apply date filter
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (dateFilter) {
+        case 'today':
+          filterDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          filterDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          filterDate.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+      
+      filtered = filtered.filter(thread =>
+        new Date(thread.createdAt) >= filterDate
+      );
+    }
+
+    // Apply engagement filter
+    if (engagementFilter !== 'all') {
+      if (engagementFilter === 'popular') {
+        filtered = filtered.filter(thread => {
+          const engagement = (thread.likes?.length || 0) + (thread.upvotes?.length || 0);
+          return engagement >= 5; // Threshold for "popular"
+        });
+      } else if (engagementFilter === 'trending') {
+        filtered = filtered.filter(thread => {
+          const engagement = (thread.likes?.length || 0) + (thread.upvotes?.length || 0) + (thread._count?.Post || 0);
+          const recency = Date.now() - new Date(thread.updatedAt || thread.createdAt).getTime();
+          const trendingScore = engagement / (recency / 86400000 + 1); // Engagement per day
+          return trendingScore >= 1; // Threshold for "trending"
+        });
+      }
+    }
+
+    // Apply tag filter
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(thread =>
+        thread.tags?.some(tag => selectedTags.includes(tag.name))
+      );
+    }
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'oldest':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'popular':
+          const aLikes = (a.likes?.length || 0) + (a.upvotes?.length || 0);
+          const bLikes = (b.likes?.length || 0) + (b.upvotes?.length || 0);
+          return bLikes - aLikes;
+        case 'trending':
+          // Trending = recent activity + engagement
+          const aScore = (a.likes?.length || 0) + (a.upvotes?.length || 0) + (a._count?.Post || 0);
+          const bScore = (b.likes?.length || 0) + (b.upvotes?.length || 0) + (b._count?.Post || 0);
+          const aRecency = Date.now() - new Date(a.updatedAt || a.createdAt).getTime();
+          const bRecency = Date.now() - new Date(b.updatedAt || b.createdAt).getTime();
+          return (bScore / (bRecency / 86400000 + 1)) - (aScore / (aRecency / 86400000 + 1));
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [threads, searchQuery, selectedTags, sortBy, authorFilter, dateFilter, engagementFilter]);
+
+  const fetchThreads = useCallback(async (cursor?: string, append = false) => {
+    try {
+      if (!append) setLoading(true);
+      else setLoadingMore(true);
+
+      const url = new URL('/api/threads', window.location.origin);
+      if (cursor) url.searchParams.set('cursor', cursor);
+      url.searchParams.set('limit', '20');
+
+      const response = await fetch(url.toString());
+      const data: ThreadsResponse = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch threads');
+      }
+
+      if (append) {
+        setThreads(prev => [...prev, ...data.threads]);
+      } else {
+        setThreads(data.threads);
+      }
+
+      setNextCursor(data.nextCursor);
+      setHasMore(!!data.nextCursor);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, []);
+
+  const loadMore = useCallback(() => {
+    if (nextCursor && hasMore && !loadingMore) {
+      fetchThreads(nextCursor, true);
+    }
+  }, [nextCursor, hasMore, loadingMore, fetchThreads]);
+
+  const clearFilters = useCallback(() => {
+    setSearchQuery('');
+    setSelectedTags([]);
+    setSortBy('newest');
+    setAuthorFilter('');
+    setDateFilter('all');
+    setEngagementFilter('all');
+    setShowAdvancedFilters(false);
+  }, []);
 
   useEffect(() => {
-    const fetchThreads = async () => {
-      try {
-        const response = await fetch('/api/threads');
-        const data: ThreadsResponse = await response.json();
-
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to fetch threads');
-        }
-
-        setThreads(data.threads);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchThreads();
-  }, []);
+  }, [fetchThreads]);
+
+  // Check if there are active filters
+  const hasActiveFilters = Boolean(searchQuery || selectedTags.length > 0 || authorFilter || dateFilter !== 'all' || engagementFilter !== 'all');
+
+  // Create empty state configuration
+  const emptyState = {
+    icon: hasActiveFilters ? '🔍' : '💬',
+    title: hasActiveFilters ? 'No threads found' : 'No threads available',
+    description: hasActiveFilters 
+      ? 'Try adjusting your search criteria or filters to find more results.' 
+      : 'No threads available at the moment.',
+    action: hasActiveFilters ? {
+      label: 'Clear All Filters',
+      onClick: clearFilters
+    } : undefined
+  };
 
   if (loading) {
     return (
@@ -98,6 +262,41 @@ export default function Home() {
           </p>
         </div>
 
+        {/* Search and Filters */}
+        <div className="mb-8">
+          <SearchFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            showAdvancedFilters={showAdvancedFilters}
+            onToggleAdvancedFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            authorFilter={authorFilter}
+            onAuthorFilterChange={setAuthorFilter}
+            dateFilter={dateFilter}
+            onDateFilterChange={setDateFilter}
+            engagementFilter={engagementFilter}
+            onEngagementFilterChange={setEngagementFilter}
+            filteredCount={filteredAndSortedThreads.length}
+            totalCount={threads.length}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+          />
+        </div>
+
+        {/* Tag Selector */}
+        {availableTags.length > 0 && (
+          <div className="mb-8">
+            <TagSelector
+              availableTags={availableTags}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+            />
+          </div>
+        )}
+
         {/* Threads Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-text-primary mb-6 flex items-center gap-3">
@@ -105,92 +304,14 @@ export default function Home() {
             Available Threads
           </h2>
           
-          {threads.length === 0 ? (
-            <div className="bg-surface rounded-xl shadow-sm border border-secondary/20 p-8 text-center backdrop-blur-sm">
-              <div className="text-6xl mb-4">💬</div>
-              <p className="text-text-secondary">No threads available at the moment.</p>
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
-              {threads.map((thread) => (
-                <Link
-                  key={thread.id}
-                  href={`/thread/${thread.id}`}
-                  className="
-                    block bg-surface rounded-xl shadow-sm border border-secondary/20 p-6 
-                    hover:border-primary/40 hover:shadow-lg hover:scale-[1.02]
-                    transition-all duration-300 backdrop-blur-sm
-                    focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
-                  "
-                >
-                  {/* Thread Status */}
-                  <ThreadStatus pinned={thread.pinned} locked={thread.locked} className="mb-4" />
-                  
-                  {/* Thread Title */}
-                  <h3 className="text-xl font-semibold text-text-primary mb-4 hover:text-primary transition-colors leading-relaxed">
-                    {thread.title}
-                  </h3>
-                  
-                  {/* Thread Tags */}
-                  <ThreadTags tags={thread.tags || []} className="mb-4" />
-                  
-                  {/* Thread Preview */}
-                  <p className="text-text-secondary mb-6 line-clamp-3 leading-relaxed">
-                    {thread.body.length > 200 
-                      ? `${thread.body.substring(0, 200)}...` 
-                      : thread.body
-                    }
-                  </p>
-                  
-                  {/* Thread Stats */}
-                  <div className="flex items-center gap-6 text-sm text-text-secondary mb-4">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      <span>{thread.views} views</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                      <span>{thread._count?.Post || 0} replies</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                      <span>{(thread.likes?.length || 0) + (thread.upvotes?.length || 0)} likes</span>
-                    </div>
-                  </div>
-                  
-                  {/* Thread Meta */}
-                  <div className="flex items-center justify-between text-sm text-text-secondary">
-                    <div className="flex items-center">
-                      <Avatar 
-                        src={thread.user.avatar} 
-                        username={thread.user.username} 
-                        size="sm" 
-                        className="mr-3" 
-                      />
-                      <span>by @{thread.user.username}</span>
-                      <span className="mx-2 text-secondary">•</span>
-                      <span>{`Created ${new Date(thread.createdAt).toLocaleString()}`}</span>
-                    </div>
-                    {/* 
-                    <div className="flex items-center gap-2 text-primary font-medium">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                      </svg>
-                      <span>Analyze Thread</span>
-                    </div> 
-                    */}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+          <ThreadGrid
+            threads={filteredAndSortedThreads}
+            viewMode={viewMode}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={loadMore}
+            emptyState={emptyState}
+          />
         </div>
 
         {/* Call to Action */}

@@ -7,11 +7,14 @@ import PostEngagement from './PostEngagement';
 
 interface PostCardProps {
   post: ForumsPost;
+  isReply?: boolean;
+  showReplyButton?: boolean;
+  onReply?: (postId: string) => void;
 }
 
 const PREVIEW_LENGTH = 300; // Characters to show before "Show more"
 
-export default function PostCard({ post }: PostCardProps) {
+export default function PostCard({ post, isReply = false, showReplyButton = false, onReply }: PostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const shouldTruncate = post.body.length > PREVIEW_LENGTH;
@@ -32,10 +35,13 @@ export default function PostCard({ post }: PostCardProps) {
   };
 
   return (
-    <div className={`bg-surface rounded-lg shadow-sm border p-4 sm:p-6 transition-all duration-200 hover:shadow-md ${post.bestAnswer
-      ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
-      : 'border-gray-200 dark:border-gray-700'
-      }`}>
+    <div className={`rounded-lg shadow-sm border p-4 sm:p-6 transition-all duration-200 hover:shadow-md ${
+      post.bestAnswer
+        ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
+        : isReply 
+          ? 'border-secondary/10 bg-surface/50'
+          : 'border-secondary/20 bg-surface'
+    }`}>
 
       {/* Best Answer Badge */}
       {post.bestAnswer && (
@@ -50,30 +56,42 @@ export default function PostCard({ post }: PostCardProps) {
       )}
 
       {/* Post Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center text-sm text-text-secondary mb-4 gap-2 sm:gap-0">
-        <div className="flex items-center">
-          <Avatar
-            src={post.user?.avatar}
-            username={post.user?.username || 'Unknown User'}
-            size="sm"
-            className="mr-2"
-          />
-          <span>@{post.user?.username || "guest"}</span>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center text-sm text-text-secondary gap-2 sm:gap-0">
+          <div className="flex items-center">
+            <Avatar
+              src={post.user?.avatar}
+              username={post.user?.username || 'Unknown User'}
+              size="sm"
+              className="mr-2"
+            />
+            <span className="font-medium">@{post.user?.username || "guest"}</span>
+          </div>
+          <span className="hidden sm:inline mx-2">•</span>
+          <span>{getTimeAgo(post.createdAt)}</span>
+          {post.updatedAt && post.updatedAt !== post.createdAt && (
+            <>
+              <span className="hidden sm:inline mx-2">•</span>
+              <div className="text-xs text-text-secondary">
+                <span className="italic">edited {getTimeAgo(post.updatedAt)}</span>
+              </div>
+            </>
+          )}
         </div>
-        <span className="hidden sm:inline mx-2">•</span>
-        <span>{getTimeAgo(post.createdAt)}</span>
-        {post.updatedAt && post.updatedAt !== post.createdAt && (
-          <>
-            <span className="hidden sm:inline mx-2">•</span>
-            <div className="text-xs text-text-secondary mt-0.5">
-              <span className="italic">edited {getTimeAgo(post.updatedAt)}</span>
-            </div>
-          </>
-        )}
 
-        {/* Post Engagement */}
-        <div className="flex-shrink-0">
-          <PostEngagement likes={post.likes} upvotes={post.upvotes} />
+        {/* Post Actions */}
+        <div className="flex items-center gap-2">
+          {showReplyButton && onReply && (
+            <button
+              onClick={() => onReply(post.id)}
+              className="text-text-secondary hover:text-primary text-sm font-medium transition-colors flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              Reply
+            </button>
+          )}
         </div>
       </div>
 
@@ -94,9 +112,16 @@ export default function PostCard({ post }: PostCardProps) {
         )}
       </div>
 
-      {/* Nested Replies Indicator */}
+      {/* Post Engagement */}
+      <PostEngagement 
+        likes={post.likes || []} 
+        upvotes={post.upvotes || []} 
+        className="border-t border-secondary/20 pt-4"
+      />
+
+      {/* Reply Indicator for nested posts */}
       {post.parentId && (
-        <div className="flex items-center text-xs text-text-secondary bg-gray-50 dark:bg-gray-800/50 rounded px-2 py-1 w-fit">
+        <div className="flex items-center text-xs text-text-secondary bg-secondary/10 rounded px-2 py-1 w-fit mt-2">
           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0L3 11.414V13a1 1 0 11-2 0V9a1 1 0 011-1h4a1 1 0 110 2H4.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
           </svg>
