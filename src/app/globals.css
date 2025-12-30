@@ -66,3 +66,19 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.spinner-ring {
+  background: conic-gradient(
+    from 0deg,
+    var(--color-primary),
+    var(--color-secondary),
+    var(--color-primary)
+  );
+  filter: blur(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner-ring {
+    animation: none;
+  }
+}

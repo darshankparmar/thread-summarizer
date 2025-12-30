@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { RichTextEditor } from './RichTextEditor';
 import { TagSelector } from './TagSelector';
-import { ForumsThread, ForumsPost, ForumsTag } from '@/types';
+import { ForumsThread, ForumsPost, ForumsTag } from '@/shared/types';
 import { clientApi } from '@/services/client-api';
 import { Save, X, AlertCircle, Edit } from 'lucide-react';
+import { Spinner } from '@/shared/components/ui/spinner';
 
 interface EditComposerProps {
   item: ForumsThread | ForumsPost;
@@ -66,6 +67,9 @@ export function EditComposer({
     } else if (body.trim().length < 10) {
       errors.body = 'Content must be at least 10 characters long';
     }
+    else if (body.trim().length > 10000) {
+      errors.body = 'Content must be less than 10,000 characters';
+    }
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -73,7 +77,7 @@ export function EditComposer({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!session?.user) {
       setError('You must be logged in to edit');
       return;
@@ -97,9 +101,19 @@ export function EditComposer({
         if (!result.success || !result.thread) {
           throw new Error(result.error || 'Failed to update thread');
         }
-        
+
+        const enrichedThread: ForumsThread = {
+          ...result.thread,
+          user: {
+            id: session.user.id,
+            username: session.user.username,
+            displayName: session.user.name,
+            avatar: session.user.image
+          }
+        };
+
         if (onSaved) {
-          onSaved(result.thread);
+          onSaved(enrichedThread);
         }
       } else {
         const result = await clientApi.updatePost(item.id, {
@@ -109,9 +123,19 @@ export function EditComposer({
         if (!result.success || !result.post) {
           throw new Error(result.error || 'Failed to update post');
         }
-        
+
+        const enrichedPost: ForumsPost = {
+          ...result.post,
+          user: {
+            id: session.user.id,
+            username: session.user.username,
+            displayName: session.user.name,
+            avatar: session.user.image
+          }
+        };
+
         if (onSaved) {
-          onSaved(result.post);
+          onSaved(enrichedPost);
         }
       }
     } catch (error) {
@@ -133,10 +157,10 @@ export function EditComposer({
       const post = item as ForumsPost;
       setBody(post.body);
     }
-    
+
     setError(null);
     setValidationErrors({});
-    
+
     if (onCancel) {
       onCancel();
     }
@@ -166,7 +190,7 @@ export function EditComposer({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -177,9 +201,9 @@ export function EditComposer({
           {/* Title Input (only for threads) */}
           {type === 'thread' && (
             <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium">
+              {/* <label htmlFor="title" className="text-sm font-medium">
                 Title *
-              </label>
+              </label> */}
               <Input
                 id="title"
                 type="text"
@@ -200,9 +224,6 @@ export function EditComposer({
 
           {/* Content Editor */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Content *
-            </label>
             <RichTextEditor
               value={body}
               onChange={setBody}
@@ -213,14 +234,17 @@ export function EditComposer({
             {validationErrors.body && (
               <p className="text-sm text-red-500">{validationErrors.body}</p>
             )}
+            <p className="text-xs text-gray-500">
+              {body.replace(/<[^>]*>/g, '').length}/10,000 characters
+            </p>
           </div>
 
           {/* Tag Selector (only for threads) */}
           {type === 'thread' && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">
+              {/* <label className="text-sm font-medium">
                 Tags (optional)
-              </label>
+              </label> */}
               <TagSelector
                 selectedTags={selectedTags}
                 onTagsChange={setSelectedTags}
@@ -230,7 +254,7 @@ export function EditComposer({
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4">
+          <div className="flex items-center justify-end gap-3">
             <Button
               type="button"
               variant="outline"
@@ -248,7 +272,7 @@ export function EditComposer({
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  <Spinner size="sm" className="h-4 w-4" />
                   Saving...
                 </div>
               ) : (

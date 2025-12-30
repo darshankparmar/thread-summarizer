@@ -4,7 +4,7 @@
  * Follows senior developer standards with proper error handling and type safety
  */
 
-import { ForumsThread, ForumsPost, ForumsTag } from '@/types';
+import { ForumsThread, ForumsPost, ForumsTag } from '@/shared/types';
 import { ApiResponse, ApiListResponse } from '@/services/api/types';
 
 // Extend base API response types for client-specific needs

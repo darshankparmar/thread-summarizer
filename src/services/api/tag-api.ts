@@ -4,7 +4,7 @@
  */
 
 import { BaseApiClient, RequestOptions } from './base-api-client';
-import { ForumsTag } from '@/types';
+import { ForumsTag } from '@/shared/types';
 import {
   CreateTagRequest,
   UpdateTagRequest,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authService } from '@/services/auth';
-import { LoginRequest, LoginResponse } from '@/types';
-import { apiMiddleware } from '@/lib/middleware';
+import { LoginRequest, LoginResponse } from '@/shared/types';
+import { apiMiddleware } from '@/infrastructure/security';
+import { authService } from '@/domains/auth/services';
 
 /**
  * POST /api/auth/login

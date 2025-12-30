@@ -4,7 +4,7 @@
  */
 
 import { BaseApiClient, RequestOptions } from './base-api-client';
-import { ForumsPost } from '@/types';
+import { ForumsPost } from '@/shared/types';
 import {
   CreatePostRequest,
   UpdatePostRequest,

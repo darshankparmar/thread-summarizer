@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
 import { CreateThreadRequest } from '@/services/api/types';
-import { getValidatedForumsToken } from '@/lib/auth-utils';
+import { getValidatedForumsTokenFromRequest } from '@/shared/lib/auth/auth-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Validate authentication and get forums token
-    const forumsToken = await getValidatedForumsToken(request);
+    const forumsToken = await getValidatedForumsTokenFromRequest(request);
 
     const body = await request.json();
     const { title, content, tags } = body;
@@ -61,12 +61,11 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    // If error is already a NextResponse (from auth validation), return it
+    console.error('Error creating thread:', error);
+
     if (error instanceof NextResponse) {
       return error;
     }
-
-    console.error('Error creating thread:', error);
     
     return NextResponse.json(
       { 

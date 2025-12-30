@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/shared/components/ui/button';
+import { Card } from '@/shared/components/ui/card';
 
 interface RichTextEditorProps {
   value: string;

@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { Button } from './ui/button';
-import Avatar from './Avatar';
-import ClientThemeToggle from './ClientThemeToggle';
-import { getUserDisplayInfo } from '@/lib/client-auth-utils';
+import { Button } from '@/shared/components/ui/button';
+import Avatar from '@/shared/components/common/Avatar';
+import ClientThemeToggle from '@/shared/components/common/ClientThemeToggle';
+import { getUserDisplayInfo } from '@/shared/lib/auth/client-auth-utils';
+import { Spinner } from '@/shared/components/ui/spinner';
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -60,7 +61,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             {/* Authentication Status */}
             {status === 'loading' ? (
-              <div className="w-8 h-8 border-2 border-secondary/20 border-t-primary rounded-full animate-spin"></div>
+              <Spinner size="sm" className="w-8 h-8" />
             ) : session ? (
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex items-center gap-2">

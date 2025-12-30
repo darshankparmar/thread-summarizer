@@ -3,10 +3,11 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import Avatar from '@/components/Avatar';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import Avatar from '@/shared/components/common/Avatar';
+import { Spinner } from '@/shared/components/ui';
 
 interface DashboardStats {
   summariesGenerated: number;
@@ -40,7 +41,7 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Load stats from localStorage (in a real app, this would come from an API)
       const savedStats = localStorage.getItem('userStats');
       if (savedStats) {
@@ -77,9 +78,11 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-text-secondary font-medium">Loading dashboard...</p>
+          <div className="flex flex-col items-center gap-4">
+            <Spinner size="lg" />
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              Loading dashboard…
+            </p>
           </div>
         </div>
       </div>
@@ -106,10 +109,10 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <Avatar 
-              src={session.user?.image || undefined} 
-              username={session.user?.username || session.user?.name || 'User'} 
-              size="lg" 
+            <Avatar
+              src={session.user?.image || undefined}
+              username={session.user?.username || session.user?.name || 'User'}
+              size="lg"
             />
             <div>
               <h1 className="text-3xl font-bold text-text-primary">
@@ -120,6 +123,16 @@ export default function Dashboard() {
               </p>
             </div>
           </div>
+
+          {/* Development Mode Notice */}
+          <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2">
+              <AlertDescription className="text-blue-800 text-blue-800">
+                <strong>Development Mode:</strong> This dashboard is currently in development.
+                Features and data shown here are for demonstration purposes and will be enhanced in future updates.
+              </AlertDescription>
+            </div>
+          </Alert>
         </div>
 
         {/* Stats Cards */}
@@ -182,7 +195,7 @@ export default function Dashboard() {
               <div className="text-2xl font-bold text-text-primary">
                 {(() => {
                   const roles = session.user?.roles || [];
-                  const hasAdminRole = roles.some(role => 
+                  const hasAdminRole = roles.some(role =>
                     typeof role === 'string' ? role === 'admin' : role.name === 'admin'
                   );
                   return hasAdminRole ? 'Admin' : 'User';
@@ -205,9 +218,9 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button 
+              <Button
                 onClick={() => router.push('/')}
-                className="w-full justify-start" 
+                className="w-full justify-start"
                 variant="outline"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,9 +229,9 @@ export default function Dashboard() {
                 Browse Threads
               </Button>
 
-              <Button 
+              <Button
                 onClick={() => router.push('/profile')}
-                className="w-full justify-start" 
+                className="w-full justify-start"
                 variant="outline"
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,8 +240,8 @@ export default function Dashboard() {
                 Edit Profile
               </Button>
 
-              <Button 
-                className="w-full justify-start" 
+              <Button
+                className="w-full justify-start"
                 variant="outline"
                 onClick={() => {
                   const threadId = prompt('Enter thread ID to analyze:');
@@ -243,8 +256,8 @@ export default function Dashboard() {
                 Analyze Thread
               </Button>
 
-              <Button 
-                className="w-full justify-start" 
+              <Button
+                className="w-full justify-start"
                 variant="outline"
                 onClick={() => window.open('https://foru.ms', '_blank')}
               >

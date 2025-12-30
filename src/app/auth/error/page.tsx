@@ -2,9 +2,10 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
+import { Spinner } from '@/shared/components/ui/spinner';
 
 const errorMessages: Record<string, { title: string; description: string; action?: string }> = {
   Configuration: {
@@ -121,7 +122,7 @@ export default function AuthError() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin"></div>
+        <Spinner size="lg" className="w-16 h-16" />
       </div>
     }>
       <AuthErrorContent />

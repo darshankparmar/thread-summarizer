@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
 import { CreateTagRequest } from '@/services/api/types';
-import { getValidatedForumsToken } from '@/lib/auth-utils';
+import { getValidatedForumsTokenFromRequest } from '@/shared/lib/auth/auth-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Validate authentication and get forums token
-    const forumsToken = await getValidatedForumsToken(request);
+    const forumsToken = await getValidatedForumsTokenFromRequest(request);
 
     const body = await request.json();
     const { name, description, color } = body;

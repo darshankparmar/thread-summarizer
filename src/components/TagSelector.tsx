@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { ForumsTag } from '@/types';
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Badge } from '@/shared/components/ui/badge';
+import { Card } from '@/shared/components/ui/card';
+import { ForumsTag } from '@/shared/types';
 import { clientApi } from '@/services/client-api';
 import { X, Plus, Search } from 'lucide-react';
+import { Spinner } from '@/shared/components/ui/spinner';
 
 interface TagSelectorProps {
   selectedTags: ForumsTag[];
@@ -28,6 +29,7 @@ export function TagSelector({
   const [showCreateNew, setShowCreateNew] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Search for tags
   useEffect(() => {
@@ -43,10 +45,10 @@ export function TagSelector({
           query: searchQuery,
           limit: 10
         });
-        
+
         if (response.success && response.data) {
           setAvailableTags(response.data);
-          
+
           // Show create new option if no exact match found
           const exactMatch = response.data.some(
             tag => tag.name.toLowerCase() === searchQuery.toLowerCase()
@@ -68,6 +70,22 @@ export function TagSelector({
     const debounceTimer = setTimeout(searchTags, 300);
     return () => clearTimeout(debounceTimer);
   }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setAvailableTags([]);
+        setShowCreateNew(false);
+        setSearchQuery('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleTagSelect = (tag: ForumsTag) => {
     if (selectedTags.length >= maxTags) return;
@@ -109,7 +127,7 @@ export function TagSelector({
       setSearchQuery('');
     } catch (error) {
       console.error('Error creating tag:', error);
-      
+
       // Fallback to temporary tag
       const tempTag: ForumsTag = {
         id: `temp-${Date.now()}`,
@@ -155,7 +173,7 @@ export function TagSelector({
 
         {/* Tag Search */}
         {selectedTags.length < maxTags && (
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -169,7 +187,10 @@ export function TagSelector({
 
             {/* Search Results */}
             {(availableTags.length > 0 || showCreateNew) && (
-              <Card className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto">
+              <Card 
+                className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto bg-[hsl(var(--popover))] text-popover-foreground"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 <div className="p-2 space-y-1">
                   {availableTags.map((tag) => (
                     <Button
@@ -177,6 +198,7 @@ export function TagSelector({
                       type="button"
                       variant="ghost"
                       onClick={() => handleTagSelect(tag)}
+                      onMouseDown={(e) => e.stopPropagation()}
                       className="w-full justify-start text-left h-auto p-2"
                       disabled={selectedTags.some(selected => selected.id === tag.id)}
                     >
@@ -205,7 +227,7 @@ export function TagSelector({
                               handleCreateNewTag();
                             }
                           }}
-                          className="flex-1"
+                          className="flex-1 bg-[hsl(var(--popover))] text-popover-foreground"
                         />
                         <Button
                           type="button"
@@ -224,7 +246,7 @@ export function TagSelector({
 
             {isSearching && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin h-4 w-4 border-2 border-orange-500 border-t-transparent rounded-full"></div>
+                <Spinner size="sm" className="h-4 w-4" />
               </div>
             )}
           </div>

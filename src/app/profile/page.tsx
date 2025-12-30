@@ -3,12 +3,13 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import Avatar from '@/components/Avatar';
-import { ForumsUser } from '@/types';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import Avatar from '@/shared/components/common/Avatar';
+import { ForumsUser } from '@/shared/types';
+import { Spinner } from '@/shared/components/ui/spinner';
 
 export default function Profile() {
   const { data: session, status } = useSession();
@@ -92,7 +93,7 @@ export default function Profile() {
       <div className="min-h-screen bg-background py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+            <Spinner size="lg" className="w-16 h-16 mx-auto mb-4" />
             <p className="text-text-secondary font-medium">Loading profile...</p>
           </div>
         </div>
@@ -218,7 +219,7 @@ export default function Profile() {
           </Card>
 
           {/* Preferences */}
-          <Card>
+          <Card className='pointer-events-none opacity-50 select-none'>
             <CardHeader>
               <CardTitle>Preferences</CardTitle>
               <CardDescription>

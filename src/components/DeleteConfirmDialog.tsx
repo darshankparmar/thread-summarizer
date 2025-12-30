@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ForumsThread, ForumsPost } from '@/types';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import { ForumsThread, ForumsPost } from '@/shared/types';
 import { clientApi } from '@/services/client-api';
 import { Trash2, AlertTriangle, X } from 'lucide-react';
+import { Input } from '@/shared/components/ui';
+import { Spinner } from '@/shared/components/ui/spinner';
 
 interface DeleteConfirmDialogProps {
   item: ForumsThread | ForumsPost;
@@ -46,14 +48,14 @@ export function DeleteConfirmDialog({
     setError(null);
 
     try {
-      const result = type === 'thread' 
+      const result = type === 'thread'
         ? await clientApi.deleteThread(item.id)
         : await clientApi.deletePost(item.id);
 
       if (!result.success) {
         throw new Error(result.error || `Failed to delete ${type}`);
       }
-      
+
       if (onDeleted) {
         onDeleted();
       }
@@ -84,10 +86,10 @@ export function DeleteConfirmDialog({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className={`w-full max-w-md ${className}`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-3xl p-4">
+      <Card className={`bg-surface border-2 border-red-300 dark:border-red-800 w-full max-w-md ${className}`}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+          <CardTitle className="flex items-center gap-2 text-red-800">
             <AlertTriangle className="h-5 w-5" />
             Delete {type === 'thread' ? 'Thread' : 'Post'}
           </CardTitle>
@@ -101,11 +103,11 @@ export function DeleteConfirmDialog({
           )}
 
           <div className="space-y-3">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-primary">
               You are about to delete:
             </p>
-            
-            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded border-l-4 border-red-500">
+
+            <div className="p-3 rounded border-l-4 border-1 border-red-400">
               <p className="font-medium text-sm">{getItemTitle()}</p>
               <p className="text-xs text-gray-500 mt-1">
                 By @{type === 'thread' ? (item as ForumsThread).user.username : (item as ForumsPost).user?.username}
@@ -119,16 +121,15 @@ export function DeleteConfirmDialog({
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-red-600 dark:text-red-400">
+            <div className='flex flex-col gap-2'>
+              <label className="text-sm font-semibold">
                 Type &quot;{requiredConfirmText}&quot; to confirm deletion:
               </label>
-              <input
+              <Input
                 type="text"
+                placeholder={requiredConfirmText}
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm"
-                placeholder={requiredConfirmText}
                 autoFocus
               />
             </div>
@@ -154,7 +155,7 @@ export function DeleteConfirmDialog({
             >
               {isDeleting ? (
                 <div className="flex items-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  <Spinner size="sm" className="h-4 w-4" />
                   Deleting...
                 </div>
               ) : (

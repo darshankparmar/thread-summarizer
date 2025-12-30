@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
 import { UpdateThreadRequest } from '@/services/api/types';
-import { getValidatedForumsToken } from '@/lib/auth-utils';
+import { getValidatedForumsTokenFromRequest } from '@/shared/lib/auth/auth-utils';
 
 export async function GET(
   request: NextRequest,
@@ -37,7 +37,7 @@ export async function PUT(
     const { id } = await params;
     
     // Validate authentication and get forums token
-    const forumsToken = await getValidatedForumsToken(request);
+    const forumsToken = await getValidatedForumsTokenFromRequest(request);
 
     const body = await request.json();
     const { title, content, tags } = body;
@@ -89,7 +89,7 @@ export async function DELETE(
     const { id } = await params;
     
     // Validate authentication and get forums token
-    const forumsToken = await getValidatedForumsToken(request);
+    const forumsToken = await getValidatedForumsTokenFromRequest(request);
     
     await forumsApiClient.threads.deleteThread(id, forumsToken);
 

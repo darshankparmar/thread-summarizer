@@ -4,10 +4,11 @@ import { useState, Suspense, useEffect } from 'react';
 import { signIn, getSession, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import { Spinner } from '@/shared/components/ui/spinner';
 
 function SignInContent() {
   const [formData, setFormData] = useState({
@@ -34,7 +35,7 @@ function SignInContent() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin"></div>
+        <Spinner size="lg" className="w-16 h-16" />
       </div>
     );
   }
@@ -43,7 +44,7 @@ function SignInContent() {
   if (status === 'authenticated') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin"></div>
+        <Spinner size="lg" className="w-16 h-16" />
       </div>
     );
   }
@@ -159,7 +160,7 @@ function SignInContent() {
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    <Spinner size="sm" className="w-4 h-4" />
                     Signing In...
                   </div>
                 ) : (
@@ -212,7 +213,7 @@ export default function SignIn() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin"></div>
+        <Spinner size="lg" className="w-16 h-16" />
       </div>
     }>
       <SignInContent />

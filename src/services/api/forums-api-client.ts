@@ -33,8 +33,8 @@ export class ForumsApiClient {
    * Convenience method to get complete thread data (thread + posts)
    */
   async getCompleteThread(threadId: string): Promise<{
-    thread: import('@/types').ForumsThread;
-    posts: import('@/types').ForumsPost[];
+    thread: import('@/shared/types').ForumsThread;
+    posts: import('@/shared/types').ForumsPost[];
   }> {
     const [thread, posts] = await Promise.all([
       this.threads.getThread(threadId),
@@ -48,7 +48,7 @@ export class ForumsApiClient {
    * Convenience method for authenticated user operations
    */
   async authenticateAndGetUser(login: string, password: string): Promise<{
-    user: import('@/types').ForumsUser;
+    user: import('@/shared/types').ForumsUser;
     token: string;
   }> {
     // Step 1: Login to get JWT token
@@ -73,10 +73,10 @@ export class ForumsApiClient {
     includeUsers?: boolean;
     limit?: number;
   } = {}): Promise<{
-    threads?: import('@/types').ForumsThread[];
-    posts?: import('@/types').ForumsPost[];
-    tags?: import('@/types').ForumsTag[];
-    users?: import('@/types').ForumsUser[];
+    threads?: import('@/shared/types').ForumsThread[];
+    posts?: import('@/shared/types').ForumsPost[];
+    tags?: import('@/shared/types').ForumsTag[];
+    users?: import('@/shared/types').ForumsUser[];
   }> {
     const {
       includeThreads = true,
@@ -88,10 +88,10 @@ export class ForumsApiClient {
 
     const searchPromises: Promise<void>[] = [];
     const results: {
-      threads?: import('@/types').ForumsThread[];
-      posts?: import('@/types').ForumsPost[];
-      tags?: import('@/types').ForumsTag[];
-      users?: import('@/types').ForumsUser[];
+      threads?: import('@/shared/types').ForumsThread[];
+      posts?: import('@/shared/types').ForumsPost[];
+      tags?: import('@/shared/types').ForumsTag[];
+      users?: import('@/shared/types').ForumsUser[];
     } = {};
 
     if (includeThreads) {

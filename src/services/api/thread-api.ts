@@ -4,7 +4,7 @@
  */
 
 import { BaseApiClient, RequestOptions } from './base-api-client';
-import { ForumsThread } from '@/types';
+import { ForumsThread } from '@/shared/types';
 import {
   CreateThreadRequest,
   UpdateThreadRequest,

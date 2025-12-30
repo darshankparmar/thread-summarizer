@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
 import { CreatePostRequest } from '@/services/api/types';
-import { executeWithTokenValidation } from '@/lib/auth-verification';
+import { getValidatedForumsTokenFromRequest } from '@/shared/lib/auth/auth-utils';
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate authentication and get forums token
+    const forumsToken = await getValidatedForumsTokenFromRequest(request);
+    
     const body = await request.json();
     const { threadId, parentId, content } = body;
 
@@ -21,34 +24,20 @@ export async function POST(request: NextRequest) {
       parentId: parentId || undefined
     };
 
-    // Use smart token validation with automatic retry on 401
-    const result = await executeWithTokenValidation(
-      request,
-      async (forumsToken: string) => {
-        return await forumsApiClient.posts.createPost(postData, forumsToken);
-      }
-    );
-
-    if (!result.success) {
-      const statusCode = result.shouldReauth ? 401 : 500;
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: result.error || 'Failed to create post',
-          shouldReauth: result.shouldReauth 
-        },
-        { status: statusCode }
-      );
-    }
-
+    const newPost = await forumsApiClient.posts.createPost(postData, forumsToken);
+    
     return NextResponse.json({
       success: true,
-      post: result.data
+      post: newPost
     });
 
   } catch (error) {
     console.error('Error creating post:', error);
     
+    if (error instanceof NextResponse) {
+      return error;
+    }
+
     return NextResponse.json(
       { 
         success: false, 

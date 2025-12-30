@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth-config';
 import { threadFetcher } from '@/services/thread-fetcher';
-import { aiService } from '@/services/ai-service';
-import { cacheManager } from '@/services/cache-manager';
-import { performanceMonitor } from '@/services/performance-monitor';
 import { errorHandler } from '@/services/error-handler';
-import { SummarizeRequest } from '@/types';
-import { apiMiddleware, InputValidator } from '@/lib/middleware';
+import { SummarizeRequest } from '@/shared/types';
+import { apiMiddleware, InputValidator } from '@/infrastructure/security';
+import { authOptions } from '@/shared/lib/config';
+import { cacheManager } from '@/infrastructure/cache';
+import { aiService } from '@/domains/ai/services';
+import { performanceMonitor } from '@/infrastructure/monitoring';
 
 /**
  * POST /api/summarize

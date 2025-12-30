@@ -3,17 +3,18 @@
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import { ForumsThread, ForumsPost } from '@/types';
-import ThreadSummaryPanel from '@/components/ThreadSummaryPanel';
-import Avatar from '@/components/Avatar';
-import ThreadTags from '@/components/ThreadTags';
-import ThreadStatus from '@/components/ThreadStatus';
-import PostEngagement from '@/components/PostEngagement';
-import PostThread from '@/components/PostThread';
+import { ForumsThread, ForumsPost } from '@/shared/types';
+import ThreadSummaryPanel from '@/domains/threads/components/ThreadSummaryPanel';
+import Avatar from '@/shared/components/common/Avatar';
+import ThreadTags from '@/domains/threads/components/ThreadTags';
+import ThreadStatus from '@/domains/threads/components/ThreadStatus';
+import PostEngagement from '@/domains/posts/components/PostEngagement';
+import PostThread from '@/domains/posts/components/PostThread';
 import { EditComposer } from '@/components/EditComposer';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { Spinner } from '@/shared/components/ui/spinner';
 
 interface ThreadPageState {
   thread: ForumsThread | null;
@@ -66,7 +67,7 @@ export default function ThreadPage() {
 
   const canEditOrDeleteThread = () => {
     if (!session?.user || !thread) return false;
-    
+
     // Check if user ID matches (using email as fallback identifier)
     const sessionUser = session.user;
     const userId = sessionUser?.id || session.user?.email;
@@ -182,17 +183,15 @@ export default function ThreadPage() {
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="animate-pulse">
-            <div className="h-8 bg-surface rounded mb-4"></div>
-            <div className="h-4 bg-surface rounded mb-2"></div>
-            <div className="h-4 bg-surface rounded mb-8"></div>
-            <div className="h-32 bg-surface rounded"></div>
+          <div className="flex flex-col items-center justify-center py-12">
+            <Spinner size="lg" className="w-12 h-12 mb-4" />
+            <div className="text-text-secondary font-medium">Loading thread...</div>
+            {retryCount > 1 && (
+              <div className="mt-2 text-sm text-text-secondary/70">
+                Retrying... (attempt {retryCount}/{MAX_RETRY_ATTEMPTS})
+              </div>
+            )}
           </div>
-          {retryCount > 1 && (
-            <div className="mt-4 text-center text-sm text-text-secondary">
-              Retrying... (attempt {retryCount}/{MAX_RETRY_ATTEMPTS})
-            </div>
-          )}
         </div>
       </div>
     );
@@ -289,7 +288,7 @@ export default function ThreadPage() {
                         </Button>
                         
                         {showThreadActions && (
-                          <div className="absolute right-0 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 min-w-[120px]">
+                          <div className="absolute right-0 top-10 bg-[hsl(var(--popover))] text-popover-foreground border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 min-w-[120px]">
                             <Button
                               variant="ghost"
                               size="sm"

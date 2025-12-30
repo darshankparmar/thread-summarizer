@@ -1,4 +1,4 @@
-import { ForumsThread, ForumsPost, FallbackData } from '@/types';
+import { ForumsThread, ForumsPost, FallbackData } from '@/shared/types';
 import { ForumsApiClient, ApiError, createForumsApiClient } from './api';
 
 /**

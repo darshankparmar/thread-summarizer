@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ForumsThread, ForumsTag } from '@/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button, Input } from '@/components/ui';
-import SearchFilters, { SortOption, ViewMode, DateFilter, EngagementFilter } from '@/components/SearchFilters';
-import ThreadGrid from '@/components/ThreadGrid';
+import { ForumsThread, ForumsTag } from '@/shared/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
+import { Button, Input, Spinner } from '@/shared/components/ui';
+import SearchFilters, { SortOption, ViewMode, DateFilter, EngagementFilter } from '@/shared/components/common/SearchFilters';
+import { ThreadGrid } from '@/domains/threads/components';
 
 interface ThreadsResponse {
   success: boolean;
@@ -219,11 +219,8 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="relative inline-block">
-              <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
-              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-secondary/40 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-            </div>
+          <div className="flex flex-col items-center gap-4">
+            <Spinner size="lg" />
             <p className="text-text-secondary font-medium">Loading available threads...</p>
           </div>
         </div>

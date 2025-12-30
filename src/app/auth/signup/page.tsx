@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RegisterRequest, RegisterResponse } from '@/types';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
+import { RegisterRequest, RegisterResponse } from '@/shared/types';
+import { Spinner } from '@/shared/components/ui/spinner';
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -37,7 +38,7 @@ export default function SignUp() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin"></div>
+        <Spinner size="lg" className="w-16 h-16" />
       </div>
     );
   }
@@ -46,7 +47,7 @@ export default function SignUp() {
   if (status === 'authenticated') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-secondary/20 border-t-primary rounded-full animate-spin"></div>
+        <Spinner size="lg" className="w-16 h-16" />
       </div>
     );
   }
@@ -269,7 +270,7 @@ export default function SignUp() {
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    <Spinner size="sm" className="w-4 h-4" />
                     Creating Account...
                   </div>
                 ) : (

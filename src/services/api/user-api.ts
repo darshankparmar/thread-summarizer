@@ -4,7 +4,7 @@
  */
 
 import { BaseApiClient, RequestOptions } from './base-api-client';
-import { ForumsUser } from '@/types';
+import { ForumsUser } from '@/shared/types';
 import {
   UpdateUserRequest,
   UserQueryParams,
