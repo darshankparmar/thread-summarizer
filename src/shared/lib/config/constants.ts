@@ -26,11 +26,11 @@ export const REQUEST_CONFIG = {
 
 // AI Service Configuration
 export const AI_CONFIG = {
-  MODEL: 'gpt-4o-mini',
+  MODEL: 'gpt-4o-mini', // gpt-4.1-mini
   TEMPERATURE: 0.3,
-  MAX_TOKENS: 1500,
+  MAX_TOKENS: 1400,
   TIMEOUT_MS: 30 * 1000,
-  MAX_POSTS_FOR_PROCESSING: 20,
+  MAX_TOTAL_CHARS: 6000,
   MIN_CONTENT_LENGTH: 50,
 } as const;
 

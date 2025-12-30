@@ -51,7 +51,7 @@ export function SummaryDisplay({ data }: SummaryDisplayProps) {
         <div className="text-based-list space-y-2 pl-4">
           {data.contributors.map((contributor, index) => (
             <div key={index} className="text-sm text-text-secondary leading-relaxed">
-              <span className="font-medium text-primary">@{contributor.username}</span>
+              <span className="font-medium text-primary">{contributor.username}</span>
               <span className="text-text-secondary"> – {contributor.contribution}</span>
             </div>
           ))}
@@ -114,5 +114,3 @@ export function LoadingDisplay({ message = "Analyzing thread content..." }: Load
     </div>
   );
 }
-
-// Note: Error display functionality moved to @/components/ErrorDisplay for consistency

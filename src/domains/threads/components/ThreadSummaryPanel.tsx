@@ -211,9 +211,12 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
   }
 
   return (
-    <Card className={`thread-summary-panel ${className}`}>
-      <CardHeader>
-        <div className="flex flex-wrap items-center gap-3">
+    <Card 
+      // className={`thread-summary-panel ${className}`}
+      className={`thread-summary-panel flex flex-col h-full max-h-[calc(100vh-100px)] ${className}`}
+    >
+      <CardHeader className="flex-shrink-0 border-b">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-3">
             <span className="text-2xl">🤖</span>
             AI Thread Summary
@@ -233,7 +236,7 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar">
         {/* Loading State */}
         {isLoading && <LoadingDisplay />}
 
@@ -249,6 +252,15 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
 
         {/* Summary Data Display - Text-based presentation without charts/graphs */}
         {data && <SummaryDisplay data={data} />}
+
+        {!data && !isLoading && !error && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="text-4xl mb-4 opacity-20">📊</div>
+            <p className="text-text-secondary text-sm">
+              Click generate to see AI insights <br/> for this conversation.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

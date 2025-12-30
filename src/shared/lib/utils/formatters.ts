@@ -16,6 +16,7 @@ export const formatContributor = (contributor: Contributor): string => {
  * Get health label based on health score
  */
 export const getHealthLabel = (healthScore: number): HealthLabel => {
+  if (healthScore == 0) return 'New Thread';
   if (healthScore >= 7) return 'Healthy';
   if (healthScore >= 4) return 'Needs Attention';
   return 'Heated Discussion';

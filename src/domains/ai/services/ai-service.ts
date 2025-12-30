@@ -59,7 +59,7 @@ export const createPromptTemplate = (
   posts: ForumsPost[]
 ): string => {
   const postCount = posts.length;
-  
+
   // Optimize prompt length for faster processing
   const optimizedPosts = optimizePostsForPrompt(posts);
   const postsText = optimizedPosts
@@ -82,6 +82,7 @@ Return a JSON object with:
 - healthScore: Constructiveness rating 1-10 (10 = highly constructive, 1 = toxic/unhelpful)
 
 Focus on factual, neutral analysis. Represent disagreements fairly.
+Do not include markdown, explanations, or extra fields. Return JSON only.
 `.trim();
 };
 
@@ -89,41 +90,40 @@ Focus on factual, neutral analysis. Represent disagreements fairly.
  * Optimize posts for AI prompt to reduce processing time while maintaining quality
  */
 function optimizePostsForPrompt(posts: ForumsPost[]): ForumsPost[] {
-  // If we have a reasonable number of posts, return all
-  if (posts.length <= AI_CONFIG.MAX_POSTS_FOR_PROCESSING) {
-    return posts;
+  const MAX_CHARS = AI_CONFIG.MAX_TOTAL_CHARS;
+  let totalChars = 0;
+  const selected: ForumsPost[] = [];
+
+  // Always include first few posts (context)
+  for (const post of posts.slice(0, 3)) {
+    if (totalChars + post.body.length > MAX_CHARS) break;
+    selected.push(post);
+    totalChars += post.body.length;
   }
 
-  // For larger threads, use intelligent sampling to maintain quality while reducing size
-  const optimized: ForumsPost[] = [];
-  
-  // Always include first few posts (context)
-  optimized.push(...posts.slice(0, 3));
-  
-  // Include last few posts (recent context)
-  optimized.push(...posts.slice(-3));
-  
-  // Sample middle posts, prioritizing longer posts (likely more substantive)
-  const middlePosts = posts.slice(3, -3);
-  if (middlePosts.length > 0) {
-    // Sort by post length and take top posts
-    const substantivePosts = middlePosts
-      .filter(post => post.body.length > 50) // Filter out very short posts
-      .sort((a, b) => b.body.length - a.body.length)
-      .slice(0, Math.min(14, middlePosts.length)); // Take up to 14 substantial posts
-    
-    // Sort back to chronological order
-    substantivePosts.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    optimized.splice(3, 0, ...substantivePosts);
+  // Add meaningful middle posts
+  const middle = posts.slice(3, -3)
+    .filter(p => p.body.length > 50)
+    .sort((a, b) => b.body.length - a.body.length);
+
+  for (const post of middle) {
+    if (totalChars + post.body.length > MAX_CHARS) break;
+    selected.push(post);
+    totalChars += post.body.length;
   }
-  
-  // Remove duplicates (in case of overlap)
+
+  // Add last posts (context closure)
+  for (const post of posts.slice(-3)) {
+    if (totalChars + post.body.length > MAX_CHARS) break;
+    selected.push(post);
+    totalChars += post.body.length;
+  }
+
+  // Deduplicate by post ID
   const seen = new Set<string>();
-  return optimized.filter(post => {
-    if (seen.has(post.id)) {
-      return false;
-    }
-    seen.add(post.id);
+  return selected.filter(p => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
     return true;
   });
 }
@@ -219,7 +219,6 @@ export class AIService {
         success: true,
         data: validatedData
       };
-
     } catch (error) {
       console.error('AI service error:', error);
       return this.handleAIServiceError(error, thread, posts);
@@ -244,7 +243,7 @@ export class AIService {
           contributors: [],
           sentiment: "No Discussion",
           healthScore: 0,
-          healthLabel: "New Thread"
+          healthLabel: getHealthLabel(0)
         },
         fallback: true
       };
@@ -269,7 +268,7 @@ export class AIService {
           })),
           sentiment: "Neutral",
           healthScore: 6,
-          healthLabel: "Needs Attention"
+          healthLabel: getHealthLabel(6)
         },
         fallback: true
       };
@@ -398,6 +397,13 @@ export class AIService {
    */
   private validateAndEnrichResponse(response: Record<string, unknown>): SummaryData {
     try {
+      if (!response || typeof response !== 'object') {
+        throw this.createAIServiceError(
+          AIServiceErrorType.VALIDATION_ERROR,
+          'AI response is not a valid object'
+        );
+      }
+
       // Validate required fields exist with proper types
       if (!response.summary || !Array.isArray(response.summary)) {
         throw this.createAIServiceError(
@@ -490,7 +496,7 @@ export class AIService {
       if (error instanceof Error && 'type' in error) {
         throw error;
       }
-      
+
       throw this.createAIServiceError(
         AIServiceErrorType.VALIDATION_ERROR,
         `Response validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -510,7 +516,10 @@ export class AIService {
     const topPosters = this.getTopPosters(posts);
 
     return {
-      summary: [`Thread contains ${postCount} posts from ${contributorCount} contributors`],
+      summary: [
+        `Thread contains ${postCount} posts from ${contributorCount} contributors.`,
+        `Content summary could not be generated automatically.`
+      ], 
       keyPoints: ["Discussion covers multiple topics"],
       contributors: topPosters.slice(0, 2).map(user => ({
         username: user.username,
@@ -518,7 +527,7 @@ export class AIService {
       })),
       sentiment: "Neutral",
       healthScore: 5,
-      healthLabel: "Needs Attention"
+      healthLabel: getHealthLabel(5)
     };
   }
 
@@ -527,7 +536,7 @@ export class AIService {
    */
   private getTopPosters(posts: ForumsPost[]): Array<{ username: string; count: number }> {
     const posterCounts = new Map<string, number>();
-    
+
     posts.forEach(post => {
       const username = post.user?.username || 'Unknown User';
       posterCounts.set(username, (posterCounts.get(username) || 0) + 1);

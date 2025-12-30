@@ -398,10 +398,10 @@ export default function ThreadPage() {
 
           {/* Right Sidebar - Desktop AI Summary */}
           <div className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-8">
+            <div className="sticky top-8 h-[calc(100vh-4rem)]">
               <ThreadSummaryPanel
                 threadId={id}
-                className=""
+                className="shadow-md border-secondary/30"
               />
             </div>
           </div>
