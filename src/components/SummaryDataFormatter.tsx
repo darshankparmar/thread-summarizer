@@ -1,27 +1,6 @@
 import React from 'react';
-import { SummaryData, Contributor, SentimentType, HealthLabel } from '../types';
-
-// Utility functions for data formatting
-export const formatContributor = (contributor: Contributor): string => {
-  return `${contributor.username} – ${contributor.contribution}`;
-};
-
-export const getHealthLabel = (healthScore: number): HealthLabel => {
-  if (healthScore >= 7) return 'Healthy';
-  if (healthScore >= 4) return 'Needs Attention';
-  return 'Heated Discussion';
-};
-
-export const getSentimentEmoji = (sentiment: SentimentType): string => {
-  const emojiMap: Record<SentimentType, string> = {
-    'Positive': '😊',
-    'Neutral': '😐',
-    'Mixed': '🤔',
-    'Negative': '😠',
-    'No Discussion': '💬'
-  };
-  return emojiMap[sentiment];
-};
+import { SummaryData } from '../types';
+import { getSentimentEmoji } from '@/lib/formatters';
 
 // Component for displaying formatted summary data
 interface SummaryDisplayProps {
@@ -137,21 +116,4 @@ export function LoadingDisplay({ message = "Analyzing thread content..." }: Load
   );
 }
 
-// Utility component for error states
-interface ErrorDisplayProps {
-  error: string;
-}
-
-export function ErrorDisplay({ error }: ErrorDisplayProps) {
-  return (
-    <div className="error-display bg-red-50 border border-red-200 rounded-lg p-4">
-      <div className="flex items-start gap-3">
-        <span className="text-red-500 text-lg">⚠️</span>
-        <div className="text-sm text-red-800">
-          <span className="font-medium">Error: </span>
-          {error}
-        </div>
-      </div>
-    </div>
-  );
-}
+// Note: Error display functionality moved to @/components/ErrorDisplay for consistency

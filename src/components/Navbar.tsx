@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { Button } from './ui/button';
 import Avatar from './Avatar';
 import ClientThemeToggle from './ClientThemeToggle';
-import { getUserDisplayInfo } from '@/lib/auth-utils';
+import { getUserDisplayInfo } from '@/lib/client-auth-utils';
 
 export default function Navbar() {
   const { data: session, status } = useSession();

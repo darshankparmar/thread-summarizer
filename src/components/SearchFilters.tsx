@@ -60,7 +60,7 @@ export default function SearchFilters({
   onClearFilters
 }: SearchFiltersProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Search Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 relative">

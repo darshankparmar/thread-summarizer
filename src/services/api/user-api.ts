@@ -159,24 +159,13 @@ export class UserApiClient extends BaseApiClient {
   }
 
   /**
-   * Get current user information (from JWT token)
-   */
-  async getCurrentUser(bearerToken: string): Promise<ForumsUser> {
-    const options: RequestOptions = {
-      method: 'GET',
-      useApiKey: false,
-      bearerToken
-    };
-
-    return this.makeRequest<ForumsUser>('/api/v1/auth/me', options);
-  }
-
-  /**
    * Update current user's profile
    */
   async updateCurrentUser(updates: UpdateUserRequest, bearerToken: string): Promise<ForumsUser> {
-    // First get current user to get their ID
-    const currentUser = await this.getCurrentUser(bearerToken);
+    // Use auth API to get current user, then update via user API
+    const { AuthApiClient } = await import('./auth-api');
+    const authApi = new AuthApiClient(this.config);
+    const currentUser = await authApi.getCurrentUser(bearerToken);
     return this.updateUser(currentUser.id, updates, bearerToken);
   }
 }

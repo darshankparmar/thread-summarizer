@@ -178,7 +178,7 @@ export class ProtectedApiWrapper {
 
   async getCurrentUser() {
     return this.executeWithAuth(token => 
-      this.apiClient.users.getCurrentUser(token)
+      this.apiClient.auth.getCurrentUser(token)
     );
   }
 

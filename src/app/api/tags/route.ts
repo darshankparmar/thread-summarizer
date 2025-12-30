@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
-import { CreateThreadRequest } from '@/services/api/types';
+import { CreateTagRequest } from '@/services/api/types';
 import { getValidatedForumsToken } from '@/lib/auth-utils';
 
 export async function GET(request: NextRequest) {
@@ -8,24 +8,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const params = Object.fromEntries(searchParams.entries());
     
-    const result = await forumsApiClient.threads.getThreads(params);
+    const tags = await forumsApiClient.tags.getTags(params);
 
     return NextResponse.json({
       success: true,
-      threads: result.data || [], // Map data to threads for client compatibility
-      count: result.count || 0,
-      nextCursor: result.nextCursor
+      ...tags
     });
 
   } catch (error) {
-    console.error('Error fetching threads:', error);
+    console.error('Error fetching tags:', error);
     
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch threads',
-        threads: [], // Provide empty array on error
-        count: 0
+        error: error instanceof Error ? error.message : 'Failed to fetch tags' 
       },
       { status: 500 }
     );
@@ -38,26 +34,26 @@ export async function POST(request: NextRequest) {
     const forumsToken = await getValidatedForumsToken(request);
 
     const body = await request.json();
-    const { title, content, tags } = body;
+    const { name, description, color } = body;
 
-    if (!title?.trim() || !content?.trim()) {
+    if (!name?.trim()) {
       return NextResponse.json(
-        { success: false, error: 'Title and content are required' },
+        { success: false, error: 'Tag name is required' },
         { status: 400 }
       );
     }
 
-    const threadData: CreateThreadRequest = {
-      title: title.trim(),
-      body: content.trim(), // Map content to body for API
-      tagIds: tags || []
+    const tagData: CreateTagRequest = {
+      name: name.trim(),
+      description: description?.trim(),
+      color: color?.trim()
     };
     
-    const newThread = await forumsApiClient.threads.createThread(threadData, forumsToken);
+    const newTag = await forumsApiClient.tags.createTag(tagData, forumsToken);
 
     return NextResponse.json({
       success: true,
-      thread: newThread
+      tag: newTag
     });
 
   } catch (error) {
@@ -66,12 +62,12 @@ export async function POST(request: NextRequest) {
       return error;
     }
 
-    console.error('Error creating thread:', error);
+    console.error('Error creating tag:', error);
     
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Failed to create thread' 
+        error: error instanceof Error ? error.message : 'Failed to create tag' 
       },
       { status: 500 }
     );

@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Avatar from '@/components/Avatar';
-import { ForumsRole } from '@/types';
 
 interface DashboardStats {
   summariesGenerated: number;
@@ -109,12 +108,12 @@ export default function Dashboard() {
           <div className="flex items-center gap-4 mb-4">
             <Avatar 
               src={session.user?.image || undefined} 
-              username={(session.user as { username?: string })?.username || session.user?.name || 'User'} 
+              username={session.user?.username || session.user?.name || 'User'} 
               size="lg" 
             />
             <div>
               <h1 className="text-3xl font-bold text-text-primary">
-                Welcome back, {(session.user as { username?: string })?.username || session.user?.name}!
+                Welcome back, {session.user?.username || session.user?.name}!
               </h1>
               <p className="text-sm text-text-secondary">
                 Here&apos;s your ThreadWise activity overview
@@ -182,7 +181,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold text-text-primary">
                 {(() => {
-                  const roles = (session.user as { roles?: (string | ForumsRole)[] })?.roles || [];
+                  const roles = session.user?.roles || [];
                   const hasAdminRole = roles.some(role => 
                     typeof role === 'string' ? role === 'admin' : role.name === 'admin'
                   );

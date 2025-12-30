@@ -78,20 +78,20 @@ export const authOptions: NextAuthOptions = {
       // Persist the Foru.ms token and user data in the JWT
       if (user) {
         token.id = user.id;
-        token.username = (user as { username?: string }).username;
-        token.emailVerified = (user as { emailVerified?: boolean }).emailVerified;
-        token.roles = (user as { roles?: string[] }).roles;
-        token.forumsToken = (user as { forumsToken?: string }).forumsToken;
+        token.username = user.username;
+        token.emailVerified = !!user.emailVerified;
+        token.roles = user.roles;
+        token.forumsToken = user.forumsToken;
       }
       return token;
     },
     async session({ session, token }) {
       // Send properties to the client (excluding sensitive data)
       if (token && session.user) {
-        (session.user as { id?: string }).id = token.id as string;
-        (session.user as { username?: string }).username = token.username as string;
-        (session.user as { emailVerified?: boolean }).emailVerified = token.emailVerified as boolean;
-        (session.user as { roles?: string[] }).roles = token.roles as string[];
+        session.user.id = token.id;
+        session.user.username = token.username;
+        session.user.emailVerified = token.emailVerified;
+        session.user.roles = token.roles;
         // Note: forumsToken is kept server-side only for security
       }
       return session;

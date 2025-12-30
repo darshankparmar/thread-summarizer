@@ -1,16 +1,19 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { ForumsThread, ForumsPost } from '@/types';
 import ThreadSummaryPanel from '@/components/ThreadSummaryPanel';
 import Avatar from '@/components/Avatar';
 import ThreadTags from '@/components/ThreadTags';
 import ThreadStatus from '@/components/ThreadStatus';
-import PostCard from '@/components/PostCard';
 import PostEngagement from '@/components/PostEngagement';
+import PostThread from '@/components/PostThread';
+import { EditComposer } from '@/components/EditComposer';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit, Trash2, MoreHorizontal } from 'lucide-react';
 
 interface ThreadPageState {
   thread: ForumsThread | null;
@@ -20,14 +23,13 @@ interface ThreadPageState {
   retryCount: number;
 }
 
-type SortOption = 'newest' | 'oldest' | 'popular';
-
 const MAX_RETRY_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 1000;
 
 export default function ThreadPage() {
   const params = useParams();
   const id = params.id as string;
+  const { data: session } = useSession();
 
   const [state, setState] = useState<ThreadPageState>({
     thread: null,
@@ -37,8 +39,43 @@ export default function ThreadPage() {
     retryCount: 0
   });
 
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [showRepliesFor, setShowRepliesFor] = useState<Set<string>>(new Set());
+  const [isEditingThread, setIsEditingThread] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showThreadActions, setShowThreadActions] = useState(false);
+
+  const handlePostsUpdate = (updatedPosts: ForumsPost[]) => {
+    setState(prev => ({
+      ...prev,
+      posts: updatedPosts
+    }));
+  };
+
+  const handleThreadUpdated = (updatedItem: ForumsThread | ForumsPost) => {
+    const updatedThread = updatedItem as ForumsThread;
+    setState(prev => ({
+      ...prev,
+      thread: updatedThread
+    }));
+    setIsEditingThread(false);
+  };
+
+  const handleThreadDeleted = () => {
+    // Redirect to home page after thread deletion
+    window.location.href = '/';
+  };
+
+  const canEditOrDeleteThread = () => {
+    if (!session?.user || !thread) return false;
+    
+    // Check if user ID matches (using email as fallback identifier)
+    const sessionUser = session.user;
+    const userId = sessionUser?.id || session.user?.email;
+    const threadUserId = thread.user.id;
+    
+    return userId === threadUserId || 
+           sessionUser.roles?.includes('admin') || 
+           sessionUser.roles?.includes('moderator');
+  };
 
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -141,49 +178,6 @@ export default function ThreadPage() {
 
   const { thread, posts, isLoading, error, retryCount } = state;
 
-  // Organize posts into threads (parent posts and their replies)
-  const organizedPosts = () => {
-    const parentPosts = posts.filter(post => !post.parentId);
-    const childPosts = posts.filter(post => post.parentId);
-    
-    return parentPosts.map(parent => ({
-      parent,
-      replies: childPosts.filter(child => child.parentId === parent.id)
-    }));
-  };
-
-  // Sort posts based on selected option
-  const sortedPosts = () => {
-    const organized = organizedPosts();
-    
-    return organized.sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.parent.createdAt).getTime() - new Date(a.parent.createdAt).getTime();
-        case 'oldest':
-          return new Date(a.parent.createdAt).getTime() - new Date(b.parent.createdAt).getTime();
-        case 'popular':
-          const aLikes = (a.parent.likes?.length || 0) + (a.parent.upvotes?.length || 0);
-          const bLikes = (b.parent.likes?.length || 0) + (b.parent.upvotes?.length || 0);
-          return bLikes - aLikes;
-        default:
-          return 0;
-      }
-    });
-  };
-
-  const toggleReplies = (postId: string) => {
-    setShowRepliesFor(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(postId)) {
-        newSet.delete(postId);
-      } else {
-        newSet.add(postId);
-      }
-      return newSet;
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background py-8">
@@ -271,59 +265,120 @@ export default function ThreadPage() {
               {/* Thread Status Indicators */}
               <ThreadStatus pinned={thread.pinned} locked={thread.locked} className="mb-3" />
 
-              <h1 className="text-xl sm:text-2xl font-bold text-text-primary mb-4">{thread.title}</h1>
-              
-              {/* Thread Tags */}
-              <ThreadTags tags={thread.tags || []} className="mb-4" />
+              {isEditingThread ? (
+                <EditComposer
+                  item={thread}
+                  type="thread"
+                  onSaved={handleThreadUpdated}
+                  onCancel={() => setIsEditingThread(false)}
+                />
+              ) : (
+                <>
+                  <div className="flex items-start justify-between mb-4">
+                    <h1 className="text-xl sm:text-2xl font-bold text-text-primary flex-1 mr-4">{thread.title}</h1>
+                    
+                    {canEditOrDeleteThread() && (
+                      <div className="relative">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowThreadActions(!showThreadActions)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                        
+                        {showThreadActions && (
+                          <div className="absolute right-0 top-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10 min-w-[120px]">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setIsEditingThread(true);
+                                setShowThreadActions(false);
+                              }}
+                              className="w-full justify-start text-left h-8 px-3"
+                            >
+                              <Edit className="h-3 w-3 mr-2" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setShowDeleteDialog(true);
+                                setShowThreadActions(false);
+                              }}
+                              className="w-full justify-start text-left h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              <Trash2 className="h-3 w-3 mr-2" />
+                              Delete
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Thread Tags */}
+                  <ThreadTags tags={thread.tags || []} className="mb-4" />
 
-              {/* Thread Author Info with Avatar */}
-              <div className="flex flex-col sm:flex-row sm:items-center text-sm text-text-secondary mb-4 gap-2 sm:gap-0">
-                <div className="flex items-center">
-                  <Avatar 
-                    src={thread.user.avatar} 
-                    username={thread.user.username} 
-                    size="sm" 
-                    className="mr-2" 
+                  {/* Thread Author Info with Avatar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center text-sm text-text-secondary mb-4 gap-2 sm:gap-0">
+                    <div className="flex items-center">
+                      <Avatar 
+                        src={thread.user.avatar} 
+                        username={thread.user.username} 
+                        size="sm" 
+                        className="mr-2" 
+                      />
+                      <span>Started by @{thread.user.username}</span>
+                    </div>
+                    <span className="hidden sm:inline mx-2">•</span>
+                    <span>{new Date(thread.createdAt).toLocaleString()}</span>
+                    {thread.updatedAt && thread.updatedAt !== thread.createdAt && (
+                      <>
+                        <span className="hidden sm:inline mx-2">•</span>
+                        <span className="text-gray-400">(edited)</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Thread Stats */}
+                  <div className="flex items-center gap-4 text-sm text-text-secondary mb-4">
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <span>{thread.views || 0} views</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span>{posts.length} {posts.length === 1 ? 'reply' : 'replies'}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      <span>{(thread.likes?.length || 0) + (thread.upvotes?.length || 0)} likes</span>
+                    </div>
+                  </div>
+                  
+                  <div className="prose max-w-none mb-4">
+                    <p className="text-text-secondary whitespace-pre-wrap">{thread.body}</p>
+                  </div>
+
+                  {/* Thread Engagement */}
+                  <PostEngagement 
+                    likes={thread.likes || []}
+                    upvotes={thread.upvotes || []}
+                    className="border-t border-secondary/20 pt-4"
                   />
-                  <span>Started by @{thread.user.username}</span>
-                </div>
-                <span className="hidden sm:inline mx-2">•</span>
-                <span>{new Date(thread.createdAt).toLocaleString()}</span>
-              </div>
-
-              {/* Thread Stats */}
-              <div className="flex items-center gap-4 text-sm text-text-secondary mb-4">
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <span>{thread.views || 0} views</span>
-                </div>
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  <span>{posts.length} {posts.length === 1 ? 'reply' : 'replies'}</span>
-                </div>
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  <span>{(thread.likes?.length || 0) + (thread.upvotes?.length || 0)} likes</span>
-                </div>
-              </div>
-              
-              <div className="prose max-w-none mb-4">
-                <p className="text-text-secondary whitespace-pre-wrap">{thread.body}</p>
-              </div>
-
-              {/* Thread Engagement */}
-              <PostEngagement 
-                likes={thread.likes || []}
-                upvotes={thread.upvotes || []}
-                className="border-t border-secondary/20 pt-4"
-              />
+                </>
+              )}
             </div>
 
             {/* Mobile AI Summary - Show only on mobile */}
@@ -334,97 +389,12 @@ export default function ThreadPage() {
               />
             </div>
 
-            {/* Thread Posts Header with Sort Options */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-              <h3 className="text-lg font-semibold text-text-primary">
-                Discussion ({posts.length} {posts.length === 1 ? 'reply' : 'replies'})
-              </h3>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-text-secondary">Sort by:</span>
-                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="newest">Newest</SelectItem>
-                      <SelectItem value="oldest">Oldest</SelectItem>
-                      <SelectItem value="popular">Most Popular</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* Thread Posts with Threading */}
-            <div className="space-y-6">
-              {sortedPosts().map(({ parent, replies }) => (
-                <div key={parent.id} className="space-y-4">
-                  {/* Parent Post */}
-                  <div className="bg-surface rounded-lg shadow-sm border border-secondary/20">
-                    <PostCard 
-                      post={parent} 
-                      showReplyButton={true}
-                      onReply={(postId) => console.log('Reply to:', postId)}
-                    />
-                    
-                    {/* Reply Actions */}
-                    {replies.length > 0 && (
-                      <div className="px-4 pb-4 border-t border-secondary/20">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleReplies(parent.id)}
-                          className="text-text-secondary hover:text-text-primary"
-                        >
-                          <svg className={`w-4 h-4 mr-2 transition-transform ${showRepliesFor.has(parent.id) ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                          {showRepliesFor.has(parent.id) ? 'Hide' : 'Show'} {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Replies */}
-                  {showRepliesFor.has(parent.id) && replies.length > 0 && (
-                    <div className="ml-8 space-y-4">
-                      {replies
-                        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-                        .map((reply) => (
-                          <div key={reply.id} className="relative">
-                            {/* Reply indicator line */}
-                            <div className="absolute -left-8 top-0 bottom-0 w-0.5 bg-primary/30"></div>
-                            <div className="absolute -left-8 top-6 w-6 h-0.5 bg-primary/30"></div>
-                            
-                            <PostCard 
-                              post={reply} 
-                              isReply={true}
-                              showReplyButton={true}
-                              onReply={(postId) => console.log('Reply to:', postId)}
-                            />
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Empty state for threads with no posts */}
-            {posts.length === 0 && (
-              <div className="bg-surface rounded-lg shadow-sm border border-secondary/20 p-8 text-center">
-                <div className="text-4xl mb-4">💬</div>
-                <h3 className="text-lg font-medium text-text-primary mb-2">No replies yet</h3>
-                <p className="text-text-secondary mb-4">Be the first to join the conversation!</p>
-                <Button variant="outline">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add Reply
-                </Button>
-              </div>
-            )}
+            {/* Thread Posts with New PostThread Component */}
+            <PostThread
+              threadId={id}
+              posts={posts}
+              onPostsUpdate={handlePostsUpdate}
+            />
           </div>
 
           {/* Right Sidebar - Desktop AI Summary */}
@@ -438,6 +408,24 @@ export default function ThreadPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteDialog && (
+        <DeleteConfirmDialog
+          item={thread}
+          type="thread"
+          onDeleted={handleThreadDeleted}
+          onCancel={() => setShowDeleteDialog(false)}
+        />
+      )}
+
+      {/* Click outside to close actions menu */}
+      {showThreadActions && (
+        <div 
+          className="fixed inset-0 z-0" 
+          onClick={() => setShowThreadActions(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import OpenAI from 'openai';
 import { ForumsThread, ForumsPost, SummaryData } from '../types';
+import { getHealthLabel } from '@/lib/formatters';
+import { AI_CONFIG, THREAD_CONFIG } from '@/lib/constants';
 
 // OpenAI client configuration
 const openai = new OpenAI({
@@ -13,14 +15,14 @@ export const summarySchema = {
     summary: {
       type: "array",
       items: { type: "string" },
-      maxItems: 5,
+      maxItems: THREAD_CONFIG.MAX_SUMMARY_POINTS,
       description: "Bullet-point summary of the thread"
     },
     keyPoints: {
       type: "array",
       items: { type: "string" },
-      minItems: 3,
-      maxItems: 5,
+      minItems: THREAD_CONFIG.MIN_KEY_POINTS,
+      maxItems: THREAD_CONFIG.MAX_KEY_POINTS,
       description: "Unique viewpoints from the discussion"
     },
     contributors: {
@@ -33,8 +35,8 @@ export const summarySchema = {
         },
         required: ["username", "contribution"]
       },
-      minItems: 2,
-      maxItems: 4
+      minItems: THREAD_CONFIG.MIN_CONTRIBUTORS,
+      maxItems: THREAD_CONFIG.MAX_CONTRIBUTORS
     },
     sentiment: {
       type: "string",
@@ -87,7 +89,7 @@ Focus on factual, neutral analysis. Represent disagreements fairly.
  */
 function optimizePostsForPrompt(posts: ForumsPost[]): ForumsPost[] {
   // If we have a reasonable number of posts, return all
-  if (posts.length <= 20) {
+  if (posts.length <= AI_CONFIG.MAX_POSTS_FOR_PROCESSING) {
     return posts;
   }
 
@@ -176,7 +178,7 @@ export class AIService {
       const prompt = createPromptTemplate(thread, posts);
 
       const completion = await this.client.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: AI_CONFIG.MODEL,
         messages: [
           {
             role: "system",
@@ -194,10 +196,10 @@ export class AIService {
             schema: summarySchema
           }
         },
-        temperature: 0.3,
-        max_tokens: 1500
+        temperature: AI_CONFIG.TEMPERATURE,
+        max_tokens: AI_CONFIG.MAX_TOKENS
       }, {
-        timeout: 30000 // 30 second timeout in options
+        timeout: AI_CONFIG.TIMEOUT_MS
       });
 
       const responseContent = completion.choices[0]?.message?.content;
@@ -471,7 +473,7 @@ export class AIService {
       });
 
       // Add derived healthLabel based on healthScore
-      const healthLabel = this.getHealthLabel(response.healthScore);
+      const healthLabel = getHealthLabel(response.healthScore);
 
       return {
         summary: response.summary as string[],
@@ -492,19 +494,6 @@ export class AIService {
         AIServiceErrorType.VALIDATION_ERROR,
         `Response validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
-    }
-  }
-
-  /**
-   * Derive health label from health score
-   */
-  private getHealthLabel(healthScore: number): 'Healthy' | 'Needs Attention' | 'Heated Discussion' {
-    if (healthScore >= 7) {
-      return 'Healthy';
-    } else if (healthScore >= 4) {
-      return 'Needs Attention';
-    } else {
-      return 'Heated Discussion';
     }
   }
 

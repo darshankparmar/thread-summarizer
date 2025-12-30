@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { ForumsThread } from '@/types';
+import { ForumsThread, ForumsTag } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button, Input } from '@/components/ui';
 import SearchFilters, { SortOption, ViewMode, DateFilter, EngagementFilter } from '@/components/SearchFilters';
-import TagSelector from '@/components/TagSelector';
 import ThreadGrid from '@/components/ThreadGrid';
 
 interface ThreadsResponse {
@@ -23,7 +22,7 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<ForumsTag[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [nextCursor, setNextCursor] = useState<string | undefined>();
@@ -33,23 +32,18 @@ export default function Home() {
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [engagementFilter, setEngagementFilter] = useState<EngagementFilter>('all');
 
-  // Get all unique tags from threads
-  const availableTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    threads.forEach(thread => {
-      thread.tags?.forEach(tag => tagSet.add(tag.name));
-    });
-    return Array.from(tagSet).sort();
-  }, [threads]);
-
   // Filter and sort threads
   const filteredAndSortedThreads = useMemo(() => {
-    let filtered = threads;
+    if (!threads || !Array.isArray(threads) || threads.length === 0) {
+      return [];
+    }
+
+    let filtered = threads.filter(Boolean);
 
     // Apply search filter (full-text search)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(thread => 
+      filtered = filtered.filter(thread =>
         thread.title.toLowerCase().includes(query) ||
         thread.body.toLowerCase().includes(query) ||
         thread.user.username.toLowerCase().includes(query) ||
@@ -69,7 +63,7 @@ export default function Home() {
     if (dateFilter !== 'all') {
       const now = new Date();
       const filterDate = new Date();
-      
+
       switch (dateFilter) {
         case 'today':
           filterDate.setDate(now.getDate() - 1);
@@ -84,7 +78,7 @@ export default function Home() {
           filterDate.setFullYear(now.getFullYear() - 1);
           break;
       }
-      
+
       filtered = filtered.filter(thread =>
         new Date(thread.createdAt) >= filterDate
       );
@@ -109,8 +103,9 @@ export default function Home() {
 
     // Apply tag filter
     if (selectedTags.length > 0) {
+      const selectedTagIds = selectedTags.map(tag => tag.id);
       filtered = filtered.filter(thread =>
-        thread.tags?.some(tag => selectedTags.includes(tag.name))
+        thread.tags?.some(tag => selectedTagIds.includes(tag.id))
       );
     }
 
@@ -156,16 +151,28 @@ export default function Home() {
         throw new Error(data.error || 'Failed to fetch threads');
       }
 
+      // Ensure threads is always an array
+      const fetchedThreads = Array.isArray(data.threads) ? data.threads : [];
+
       if (append) {
-        setThreads(prev => [...prev, ...data.threads]);
+        setThreads(prev => {
+          const prevThreads = Array.isArray(prev) ? prev : [];
+          return [...prevThreads, ...fetchedThreads];
+        });
       } else {
-        setThreads(data.threads);
+        setThreads(fetchedThreads);
       }
 
       setNextCursor(data.nextCursor);
       setHasMore(!!data.nextCursor);
+      setError(null); // Clear any previous errors
     } catch (err) {
+      console.error('Error fetching threads:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
+      // Ensure threads is still an array even on error
+      if (!append) {
+        setThreads([]);
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -199,8 +206,8 @@ export default function Home() {
   const emptyState = {
     icon: hasActiveFilters ? '🔍' : '💬',
     title: hasActiveFilters ? 'No threads found' : 'No threads available',
-    description: hasActiveFilters 
-      ? 'Try adjusting your search criteria or filters to find more results.' 
+    description: hasActiveFilters
+      ? 'Try adjusting your search criteria or filters to find more results.'
       : 'No threads available at the moment.',
     action: hasActiveFilters ? {
       label: 'Clear All Filters',
@@ -263,7 +270,7 @@ export default function Home() {
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-8">
+        <div className="mb-3">
           <SearchFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -287,23 +294,28 @@ export default function Home() {
         </div>
 
         {/* Tag Selector */}
-        {availableTags.length > 0 && (
-          <div className="mb-8">
-            <TagSelector
-              availableTags={availableTags}
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-            />
-          </div>
-        )}
+        {/* <div className="mb-8">
+          <TagSelector
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+          />
+        </div> */}
 
         {/* Threads Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-semibold text-text-primary mb-6 flex items-center gap-3">
-            <span className="w-3 h-3 bg-primary rounded-full"></span>
+            <svg
+              width="12"
+              height="12"
+              className="shrink-0"
+              style={{ fill: 'var(--color-primary)' }}
+              aria-hidden="true"
+            >
+              <circle cx="6" cy="6" r="6" />
+            </svg>
             Available Threads
           </h2>
-          
+
           <ThreadGrid
             threads={filteredAndSortedThreads}
             viewMode={viewMode}

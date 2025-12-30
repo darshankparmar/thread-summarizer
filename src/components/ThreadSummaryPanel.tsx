@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { SummaryData, ThreadSummaryPanelProps } from '../types';
-import { SummaryDisplay, LoadingDisplay, getHealthLabel } from './SummaryDataFormatter';
+import { SummaryDisplay, LoadingDisplay } from './SummaryDataFormatter';
+import { getHealthLabel } from '@/lib/formatters';
 import ErrorDisplay from './ErrorDisplay';
 import { errorHandler, UserFriendlyError } from '@/services/error-handler';
 import { Button } from './ui/button';

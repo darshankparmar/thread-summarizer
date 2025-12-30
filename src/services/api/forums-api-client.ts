@@ -154,9 +154,22 @@ export function createForumsApiClient(config?: Partial<ApiConfig>): ForumsApiCli
 }
 
 /**
- * Default export - pre-configured client instance
+ * Server-only client instance
+ * Only initialize if we're in a server environment
  */
-export const forumsApiClient = createForumsApiClient();
+export const forumsApiClient = (() => {
+  // Check if we're in a server environment
+  if (typeof window === 'undefined') {
+    return createForumsApiClient();
+  }
+  
+  // Return a proxy that throws errors if accessed on client side
+  return new Proxy({} as ForumsApiClient, {
+    get() {
+      throw new Error('forumsApiClient can only be used on the server side. Use clientApi for client-side operations.');
+    }
+  });
+})();
 
 // Re-export all types for convenience
 export * from './types';

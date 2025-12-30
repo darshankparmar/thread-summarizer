@@ -1,4 +1,5 @@
 import { SummaryData } from '@/types';
+import { CACHE_CONFIG } from '@/lib/constants';
 
 /**
  * Cache entry structure for storing summary data
@@ -54,9 +55,9 @@ export class CacheManager {
 
   constructor(config?: Partial<CacheConfig>) {
     this.config = {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours default
-      maxEntries: 1000, // 1000 entries default
-      cleanupInterval: 60 * 60 * 1000, // 1 hour cleanup interval
+      maxAge: CACHE_CONFIG.TTL_MS,
+      maxEntries: CACHE_CONFIG.MAX_ENTRIES,
+      cleanupInterval: CACHE_CONFIG.CLEANUP_INTERVAL_MS,
       ...config
     };
 
