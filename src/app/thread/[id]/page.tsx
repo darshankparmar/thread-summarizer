@@ -15,6 +15,7 @@ import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { Button } from '@/shared/components/ui/button';
 import { Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import { Spinner } from '@/shared/components/ui/spinner';
+import { clientApi, ClientApiError } from '@/services/client-api';
 
 interface ThreadPageState {
   thread: ForumsThread | null;
@@ -85,39 +86,34 @@ export default function ThreadPage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-      const response = await fetch(`/api/thread/${id}`, {
-        signal: controller.signal
-      });
+      const response = await clientApi.getThread(id);
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Thread not found. Please check the thread ID.');
-        } else if (response.status >= 500) {
-          throw new Error('Server error occurred. Please try again.');
+      if (!response.success) {
+        if (response.error?.includes('not found')) {
+          throw new ClientApiError('Thread not found. Please check the thread ID.', 404);
         } else {
-          throw new Error(`Failed to fetch thread: ${response.status}`);
+          throw new ClientApiError(response.error || 'Failed to fetch thread data');
         }
       }
 
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch thread data');
-      }
-
-      return { thread: data.thread, posts: data.posts };
+      return { thread: response.thread!, posts: response.posts || [] };
 
     } catch (error) {
       // Handle abort/timeout errors
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timed out. Please try again.');
+        throw new ClientApiError('Request timed out. Please try again.');
+      }
+
+      // Handle ClientApiError
+      if (error instanceof ClientApiError) {
+        throw error;
       }
 
       // Handle network errors
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Network error. Please check your connection and try again.');
+        throw new ClientApiError('Network error. Please check your connection and try again.');
       }
 
       // Re-throw other errors as-is
@@ -151,10 +147,10 @@ export default function ThreadPage() {
         return; // Success - exit retry loop
 
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error occurred');
+        lastError = error instanceof ClientApiError ? error : new ClientApiError('Unknown error occurred');
 
         // Don't retry for 404 errors
-        if (lastError.message.includes('Thread not found')) {
+        if (lastError instanceof ClientApiError && lastError.statusCode === 404) {
           break;
         }
 

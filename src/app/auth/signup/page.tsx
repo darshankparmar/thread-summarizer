@@ -8,8 +8,9 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
-import { RegisterRequest, RegisterResponse } from '@/shared/types';
+import { RegisterRequest } from '@/shared/types';
 import { Spinner } from '@/shared/components/ui/spinner';
+import { clientApi, ClientApiError } from '@/services/client-api';
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -78,18 +79,10 @@ export default function SignUp() {
         displayName: formData.displayName.trim() || undefined
       };
 
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registerData),
-      });
+      const response = await clientApi.register(registerData);
 
-      const result: RegisterResponse = await response.json();
-
-      if (!result.success) {
-        setError(result.error || 'Registration failed');
+      if (!response.success) {
+        setError(response.error || 'Registration failed');
       } else {
         setSuccess(true);
         // Redirect to sign in page after successful registration
@@ -99,7 +92,10 @@ export default function SignUp() {
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setError('An unexpected error occurred');
+      const errorMessage = err instanceof ClientApiError 
+        ? err.message 
+        : 'An unexpected error occurred';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

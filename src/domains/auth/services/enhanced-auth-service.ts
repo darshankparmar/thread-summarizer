@@ -3,7 +3,7 @@
  * Integrates with the new API client and provides comprehensive auth management
  */
 
-import { ForumsApiClient, ApiError } from '@/domains/threads/services/api';
+import { ForumsApiClient, ApiError } from '@/services/api';
 import { AuthUser, LoginRequest, RegisterRequest, ForumsRole } from '@/shared/types';
 import { SessionManager } from './session-manager';
 import { TokenManager } from './token-manager';

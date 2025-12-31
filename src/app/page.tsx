@@ -7,14 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/aler
 import { Button, Input, Spinner } from '@/shared/components/ui';
 import SearchFilters, { SortOption, ViewMode, DateFilter, EngagementFilter } from '@/shared/components/common/SearchFilters';
 import { ThreadGrid } from '@/domains/threads/components';
-
-interface ThreadsResponse {
-  success: boolean;
-  threads: ForumsThread[];
-  count: number;
-  nextCursor?: string;
-  error?: string;
-}
+import { clientApi, ClientApiError } from '@/services/client-api';
 
 export default function Home() {
   const [threads, setThreads] = useState<ForumsThread[]>([]);
@@ -140,19 +133,17 @@ export default function Home() {
       if (!append) setLoading(true);
       else setLoadingMore(true);
 
-      const url = new URL('/api/threads', window.location.origin);
-      if (cursor) url.searchParams.set('cursor', cursor);
-      url.searchParams.set('limit', '20');
+      const response = await clientApi.getThreads({
+        cursor,
+        limit: 20
+      });
 
-      const response = await fetch(url.toString());
-      const data: ThreadsResponse = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch threads');
+      if (!response.success) {
+        throw new ClientApiError(response.error || 'Failed to fetch threads');
       }
 
       // Ensure threads is always an array
-      const fetchedThreads = Array.isArray(data.threads) ? data.threads : [];
+      const fetchedThreads = Array.isArray(response.threads) ? response.threads : [];
 
       if (append) {
         setThreads(prev => {
@@ -163,12 +154,15 @@ export default function Home() {
         setThreads(fetchedThreads);
       }
 
-      setNextCursor(data.nextCursor);
-      setHasMore(!!data.nextCursor);
+      setNextCursor(response.nextCursor);
+      setHasMore(!!response.nextCursor);
       setError(null); // Clear any previous errors
     } catch (err) {
       console.error('Error fetching threads:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      const errorMessage = err instanceof ClientApiError 
+        ? err.message 
+        : 'Unknown error occurred';
+      setError(errorMessage);
       // Ensure threads is still an array even on error
       if (!append) {
         setThreads([]);

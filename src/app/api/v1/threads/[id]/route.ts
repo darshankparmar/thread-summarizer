@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { forumsApiClient } from '@/domains/threads/services/api';
-import { UpdateThreadRequest } from '@/domains/threads/services/api/types';
+import { UpdateThreadRequest, forumsApiClient } from '@/services/api';
 import { getValidatedForumsTokenFromSession } from '@/shared/lib/auth/auth-utils';
 
 interface RouteParams {

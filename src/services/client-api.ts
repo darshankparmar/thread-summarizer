@@ -4,12 +4,14 @@
  * Follows senior developer standards with proper error handling and type safety
  */
 
-import { ForumsThread, ForumsPost, ForumsTag } from '@/shared/types';
+import { ForumsThread, ForumsPost, ForumsTag, RegisterRequest } from '@/shared/types';
+import { SummaryData } from '@/shared/types/common';
 import { ApiResponse, ApiListResponse } from '@/services/api/types';
 
 // Extend base API response types for client-specific needs
 export interface ThreadResponse extends ApiResponse<ForumsThread> {
   thread?: ForumsThread;
+  posts?: ForumsPost[];
 }
 
 export interface PostResponse extends ApiResponse<ForumsPost> {
@@ -91,6 +93,22 @@ class ClientApiService {
     }
   }
 
+  // AI operations
+  async summarizeThread(threadId: string): Promise<ApiResponse<SummaryData>> {
+    return this.makeRequest<ApiResponse<SummaryData>>('/api/summarize', {
+      method: 'POST',
+      body: JSON.stringify({ threadId }),
+    });
+  }
+
+  // Authentication operations
+  async register(data: RegisterRequest): Promise<ApiResponse<void>> {
+    return this.makeRequest<ApiResponse<void>>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Thread operations
   async createThread(data: {
     title: string;
@@ -104,7 +122,7 @@ class ClientApiService {
   }
 
   async getThread(id: string): Promise<ThreadResponse> {
-    return this.makeRequest<ThreadResponse>(`/api/threads/${id}`);
+    return this.makeRequest<ThreadResponse>(`/api/thread/${id}`);
   }
 
   async updateThread(id: string, data: {

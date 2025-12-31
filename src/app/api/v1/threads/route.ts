@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { forumsApiClient } from '@/domains/threads/services/api';
-import { CreateThreadRequest } from '@/domains/threads/services/api/types';
+import { forumsApiClient, CreateThreadRequest } from '@/services/api';
 import { getValidatedForumsTokenFromSession } from '@/shared/lib/auth/auth-utils';
 
 export async function GET(request: NextRequest) {

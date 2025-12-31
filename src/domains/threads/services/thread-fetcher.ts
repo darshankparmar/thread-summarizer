@@ -4,7 +4,7 @@
  */
 
 import { ForumsThread, ForumsPost } from '@/shared/types';
-import { forumsApiClient } from './api';
+import { forumsApiClient } from '@/services/api';
 
 export interface ThreadFetchResult {
   success: boolean;

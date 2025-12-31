@@ -16,7 +16,7 @@ export type { TokenData } from './token-manager';
 
 // Factory function to create configured auth service
 import { EnhancedAuthService } from './enhanced-auth-service';
-import { forumsApiClient } from '@/domains/threads/services/api';
+import { forumsApiClient } from '@/services/api';
 
 /**
  * Create a configured authentication service instance

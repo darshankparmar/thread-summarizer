@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Spinner } from '@/shared/components/ui/spinner';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { SummaryData, ThreadSummaryPanelProps } from '@/shared/types/common';
+import { clientApi, ClientApiError } from '@/services/client-api';
 
 interface ThreadSummaryPanelState {
   isLoading: boolean;
@@ -39,57 +40,47 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-      const response = await fetch('/api/summarize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ threadId }),
-        signal: controller.signal
-      });
+      const response = await clientApi.summarizeThread(threadId);
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        // Handle specific HTTP status codes
-        if (response.status === 401) {
-          throw new Error('Authentication required. Please sign in to use AI features.');
-        } else if (response.status === 429) {
-          throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
-        } else if (response.status === 404) {
-          throw new Error('Thread not found. Please check the thread ID.');
-        } else if (response.status >= 500) {
-          throw new Error('Server error occurred. Please try again.');
+      if (!response.success) {
+        // Handle specific error cases
+        if (response.error?.includes('Authentication required')) {
+          throw new ClientApiError('Authentication required. Please sign in to use AI features.', 401);
+        } else if (response.error?.includes('Rate limit')) {
+          throw new ClientApiError('Rate limit exceeded. Please wait a moment before trying again.', 429);
+        } else if (response.error?.includes('not found')) {
+          throw new ClientApiError('Thread not found. Please check the thread ID.', 404);
         } else {
-          throw new Error(`Request failed with status ${response.status}`);
+          throw new ClientApiError(response.error || 'Failed to generate summary');
         }
       }
 
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to generate summary');
-      }
-
-      if (!result.data) {
-        throw new Error('No summary data received from server');
+      if (!response.data) {
+        throw new ClientApiError('No summary data received from server');
       }
 
       // Ensure health label is derived from health score
       return {
-        ...result.data,
-        healthLabel: getHealthLabel(result.data.healthScore)
+        ...response.data,
+        healthLabel: getHealthLabel(response.data.healthScore)
       };
 
     } catch (error) {
       // Handle abort/timeout errors
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timed out. Please try again.');
+        throw new ClientApiError('Request timed out. Please try again.');
+      }
+
+      // Handle ClientApiError
+      if (error instanceof ClientApiError) {
+        throw error;
       }
 
       // Handle network errors
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Network error. Please check your connection and try again.');
+        throw new ClientApiError('Network error. Please check your connection and try again.');
       }
 
       // Re-throw other errors as-is
@@ -124,7 +115,7 @@ export default function ThreadSummaryPanel({ threadId, className = '' }: ThreadS
         return; // Success - exit retry loop
 
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error occurred');
+        lastError = error instanceof ClientApiError ? error : new ClientApiError('Unknown error occurred');
         
         // Process error through error handler
         const processedError = errorHandler.processError(lastError, 'summary generation');
