@@ -140,32 +140,38 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
                 </Button>
 
                 {showActions && (
-                  <div className="absolute right-0 top-8 bg-[hsl(var(--popover))] text-popover-foreground border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[120px]">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setIsEditing(true);
-                        setShowActions(false);
-                      }}
-                      className="w-full justify-start text-left px-3 py-2 text-sm"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setShowDeleteDialog(true);
-                        setShowActions(false);
-                      }}
-                      className="w-full justify-start text-left px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </Button>
-                  </div>
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowActions(false)}
+                    />
+                    <div className="absolute right-0 top-10 bg-[hsl(var(--popover))] text-popover-foreground border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[120px]">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setIsEditing(true);
+                          setShowActions(false);
+                        }}
+                        className="w-full justify-start text-left h-8 px-3 hover:bg-orange-400 dark:hover:bg-orange-400"
+                      >
+                        <Edit className="h-3 w-3 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowDeleteDialog(true);
+                          setShowActions(false);
+                        }}
+                        className="w-full justify-start text-left h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-300 dark:hover:bg-red-300"
+                      >
+                        <Trash2 className="h-3 w-3 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+                  </>
                 )}
               </div>
             )}
@@ -261,8 +267,8 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
           {childReplies.map((child) => {
             return (
               <PostItem
-                key={child .id}
-                post={child }
+                key={child.id}
+                post={child}
                 threadId={threadId}
                 allPosts={allPosts}
                 onReplyCreated={onReplyCreated}

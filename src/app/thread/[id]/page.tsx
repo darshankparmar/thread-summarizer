@@ -296,7 +296,7 @@ export default function ThreadPage() {
                                 setIsEditingThread(true);
                                 setShowThreadActions(false);
                               }}
-                              className="w-full justify-start text-left h-8 px-3"
+                              className="w-full justify-start text-left h-8 px-3 hover:bg-orange-400 dark:hover:bg-orange-400"
                             >
                               <Edit className="h-3 w-3 mr-2" />
                               Edit
@@ -308,7 +308,7 @@ export default function ThreadPage() {
                                 setShowDeleteDialog(true);
                                 setShowThreadActions(false);
                               }}
-                              className="w-full justify-start text-left h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              className="w-full justify-start text-left h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-300 dark:hover:bg-red-300"
                             >
                               <Trash2 className="h-3 w-3 mr-2" />
                               Delete
@@ -393,6 +393,7 @@ export default function ThreadPage() {
               threadId={id}
               posts={posts}
               onPostsUpdate={handlePostsUpdate}
+              onReloadNeeded={fetchThreadData}
             />
           </div>
 

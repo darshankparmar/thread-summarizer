@@ -184,6 +184,7 @@ class ClientApiService {
   async getTags(params?: {
     query?: string;
     limit?: number;
+    includeThreads?: false;
   }): Promise<ApiResponse<ForumsTag[]>> {
     const searchParams = new URLSearchParams();
     if (params) {

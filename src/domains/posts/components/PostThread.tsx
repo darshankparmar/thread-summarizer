@@ -12,6 +12,7 @@ interface PostThreadProps {
   threadId: string;
   posts: ForumsPost[];
   onPostsUpdate?: (posts: ForumsPost[]) => void;
+  onReloadNeeded?: () => void; // New prop for triggering reload
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export default function PostThread({
   threadId,
   posts,
   onPostsUpdate,
+  onReloadNeeded,
   className = ''
 }: PostThreadProps) {
   const { data: session } = useSession();
@@ -43,24 +45,14 @@ export default function PostThread({
   };
 
   const handlePostDeleted = (postId: string) => {
-    setCurrentPosts(prevPosts => {
-      // Collect all descendants of the deleted post
-      const idsToRemove = new Set<string>();
-
-      const collectChildren = (id: string) => {
-        idsToRemove.add(id);
-        prevPosts
-          .filter(p => p.parentId === id)
-          .forEach(child => collectChildren(child.id));
-      };
-
-      collectChildren(postId);
-
-      const updatedPosts = prevPosts.filter(p => !idsToRemove.has(p.id));
-
-      onPostsUpdate?.(updatedPosts);
-      return updatedPosts;
-    });
+    // Instead of manually managing state, trigger a reload from the server
+    // This ensures we always have the correct post hierarchy and avoids React state update errors
+    if (onReloadNeeded) {
+      onReloadNeeded();
+    } else {
+      // Fallback: remove from local state if no reload callback provided
+      setCurrentPosts(prevPosts => prevPosts.filter(p => p.id !== postId));
+    }
   };
 
   if (currentPosts.length === 0) {

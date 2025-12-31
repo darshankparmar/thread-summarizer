@@ -43,7 +43,8 @@ export function TagSelector({
       try {
         const response = await clientApi.getTags({
           query: searchQuery,
-          limit: 10
+          limit: 10,
+          includeThreads: false
         });
 
         if (response.success && response.data) {
