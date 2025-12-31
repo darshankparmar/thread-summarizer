@@ -126,24 +126,31 @@ src/
 
 ## Future Improvements
 
-### Planned Features
+### AI & Intelligence Enhancements
 
-* **Polling System**: Create and vote on polls within threads
-* **Real-time Notifications**: Live updates for replies and mentions
-* **Private Messaging**: User-to-user messaging system
-* **Admin Dashboard**: Content moderation and user management tools
-* **Advanced Engagement**: Likes, upvotes and  interaction metrics
-* **WebSocket Integration**: Real-time thread updates
-* **PWA Support**: Offline access and installable experience
-* **User Following**: Activity feeds and follower relationships
-* **Reporting System**: Content moderation and reporting workflows
+* **Advanced Summarization Modes** – Support multiple summary styles such as TL;DR, executive overview, technical breakdown, and decision-focused summaries.
+* **Context-Aware Thread Understanding** – Improve summarization accuracy by identifying key arguments, consensus points, and unresolved questions within long discussions.
+* **Multi-Model Support** – Enable flexible switching between different LLM providers (OpenAI, open-source models, or self-hosted inference) based on cost, performance, or privacy needs.
+* **Incremental Summarization** – Update summaries dynamically as new posts are added instead of reprocessing entire threads.
 
-### Technical Enhancements
+### Platform & Feature Expansion
 
-* End-to-end testing with Playwright
-* Advanced caching strategies
-* CI/CD pipeline implementation
-* Performance optimization and monitoring
+* **Engagement Signals** – Introduce reactions, voting, and engagement metrics to improve content ranking and insight extraction.
+* **Real-Time Updates** – WebSocket-based live thread updates and streaming summaries.
+* **User Preferences & Customization** – Allow users to control summary length, tone, and formatting.
+* **Moderation & Insights** – Surface moderation signals, sentiment trends, and conversation health indicators for community managers.
+
+### Performance & Scalability
+
+* **Advanced Caching and Batching** – Reduce latency and compute cost for large or frequently updated threads.
+* **Scalable Processing Pipelines** – Prepare the system for high-volume communities and enterprise-scale usage.
+* **Monitoring & Observability** – Add structured logging, tracing, and performance metrics.
+
+### Ecosystem & Integration
+
+* **Deeper Foru.ms Integration** – Expand beyond summaries into analytics dashboards, moderation tooling, and content discovery.
+* **API-First Extensions** – Enable external tools and products to consume summarized thread data.
+* **PWA & Offline Support** – Improve accessibility with offline viewing and installable experiences.
 
 ## License
 
