@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
 
     const threadData: CreateThreadRequest = {
       title: title.trim(),
-      body: content.trim(), // Map content to body for API
-      tagIds: tags || []
+      body: content.trim(),
+      tags: tags || []
     };
     
     const newThread = await forumsApiClient.threads.createThread(threadData, forumsToken);

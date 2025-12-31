@@ -95,7 +95,7 @@ export class PollApiClient extends BaseApiClient {
 
     const options: RequestOptions = {
       method: 'GET',
-      useApiKey: !bearerToken,
+      useApiKey: false,
       bearerToken
     };
 

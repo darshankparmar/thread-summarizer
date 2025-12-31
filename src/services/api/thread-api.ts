@@ -52,7 +52,7 @@ export class ThreadApiClient extends BaseApiClient {
     const options: RequestOptions = {
       method: 'POST',
       body: threadData,
-      useApiKey: !bearerToken,
+      useApiKey: false,
       bearerToken
     };
 
@@ -74,7 +74,7 @@ export class ThreadApiClient extends BaseApiClient {
     const options: RequestOptions = {
       method: 'PUT',
       body: updates,
-      useApiKey: !bearerToken,
+      useApiKey: false,
       bearerToken
     };
 
@@ -91,7 +91,7 @@ export class ThreadApiClient extends BaseApiClient {
 
     const options: RequestOptions = {
       method: 'DELETE',
-      useApiKey: !bearerToken,
+      useApiKey: false,
       bearerToken
     };
 

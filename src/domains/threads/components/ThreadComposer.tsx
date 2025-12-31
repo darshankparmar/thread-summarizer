@@ -117,7 +117,7 @@ export function ThreadComposer({ onThreadCreated, className = "" }: ThreadCompos
       const result = await clientApi.createThread({
         title: title.trim(),
         content: body.trim(),
-        tags: selectedTags.map(tag => tag.id).filter(id => !id.startsWith('temp-'))
+        tags: selectedTags.map(tag => tag.id)
       });
 
       if (!result.success || !result.thread) {

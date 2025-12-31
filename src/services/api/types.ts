@@ -19,7 +19,7 @@ export interface PaginatedResponse<T> {
 export interface CreateThreadRequest {
   title: string;
   body: string;
-  tagIds?: string[];
+  tags?: string[];
   locked?: boolean;
   pinned?: boolean;
 }
@@ -29,7 +29,7 @@ export interface UpdateThreadRequest {
   body?: string;
   locked?: boolean;
   pinned?: boolean;
-  tagIds?: string[];
+  tags?: string[];
 }
 
 export interface ThreadQueryParams extends PaginationParams {

@@ -48,7 +48,7 @@ export async function PUT(
     }
     
     if (tags !== undefined) {
-      updates.tagIds = tags;
+      updates.tags = tags;
     }
     
     const updatedThread = await forumsApiClient.threads.updateThread(id, updates, forumsToken);

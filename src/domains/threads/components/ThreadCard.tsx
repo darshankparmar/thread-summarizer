@@ -6,6 +6,7 @@ import Avatar from '@/shared/components/common/Avatar';
 import { ViewMode } from '@/shared/components/common/SearchFilters';
 import ThreadStatus from './ThreadStatus';
 import ThreadTags from './ThreadTags';
+import { RichTextDisplay } from '@/components/RichTextDisplay';
 
 interface ThreadCardProps {
   thread: ForumsThread;
@@ -56,14 +57,14 @@ export default function ThreadCard({ thread, viewMode }: ThreadCardProps) {
       <ThreadTags tags={thread.tags || []} className="mb-4" />
       
       {/* Thread Preview */}
-      <p className={`text-text-secondary mb-6 leading-relaxed ${
+      <div className={`text-text-secondary mb-6 leading-relaxed ${
         viewMode === 'grid' ? 'text-sm line-clamp-4 flex-grow' : 'line-clamp-3'
       }`}>
         {thread.body.length > (viewMode === 'grid' ? 120 : 200)
-          ? `${thread.body.substring(0, viewMode === 'grid' ? 120 : 200)}...` 
-          : thread.body
+          ? <RichTextDisplay content={`${thread.body.substring(0, viewMode === 'grid' ? 120 : 200)}...`} />
+          : <RichTextDisplay content={thread.body} />
         }
-      </p>
+      </div>
       
       {/* Thread Stats */}
       <div className={`flex items-center text-sm text-text-secondary mb-4 ${
