@@ -111,7 +111,7 @@ export class BaseApiClient {
 
     switch (response.status) {
       case 401:
-        throw new ApiError('Authentication failed - invalid credentials', 401);
+        throw new ApiError('Authentication failed - invalid credentials or session expired', 401);
       case 403:
         throw new ApiError('Access forbidden - insufficient permissions', 403);
       case 404:

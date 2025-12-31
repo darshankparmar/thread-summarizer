@@ -21,15 +21,22 @@ function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const message = searchParams.get('message');
   const { data: session, status } = useSession();
+
+  // Show session expired message
+  useEffect(() => {
+    if (message === 'session-expired') {
+      setError('Your session has expired. Please sign in again.');
+    }
+  }, [message]);
 
   // Redirect authenticated users
   useEffect(() => {
     if (status === 'authenticated' && session) {
-      router.push(callbackUrl);
-      router.refresh();
+      window.location.href = callbackUrl;
     }
-  }, [status, session, router, callbackUrl]);
+  }, [status, session, callbackUrl]);
 
   // Show loading while checking authentication status
   if (status === 'loading') {
@@ -64,10 +71,10 @@ function SignInContent() {
       if (result?.error) {
         setError('Invalid username/email or password');
       } else if (result?.ok) {
-        // Refresh session and redirect
-        await getSession();
-        router.push(callbackUrl);
-        router.refresh();
+        // Wait a moment for session to update, then redirect
+        setTimeout(() => {
+          window.location.href = callbackUrl;
+        }, 100);
       } else {
         setError('An unexpected error occurred');
       }

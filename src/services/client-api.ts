@@ -61,11 +61,15 @@ class ClientApiService {
         const errorData = await response.json().catch(() => ({}));
         
         // Handle authentication errors specially
-        if (response.status === 401 && errorData.shouldReauth) {
-          // Trigger re-authentication
+        if (response.status === 401) {
+          // Trigger re-authentication for any 401 error
           if (typeof window !== 'undefined') {
             const { signOut } = await import('next-auth/react');
-            await signOut({ callbackUrl: '/auth/signin?message=session-expired' });
+            const currentUrl = window.location.pathname + window.location.search;
+            await signOut({ 
+              callbackUrl: `/auth/signin?message=session-expired&callbackUrl=${encodeURIComponent(currentUrl)}`,
+              redirect: true 
+            });
           }
           throw new ClientApiError(
             'Your session has expired. Please log in again.',

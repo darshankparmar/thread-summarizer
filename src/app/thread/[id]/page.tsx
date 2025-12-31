@@ -200,13 +200,13 @@ export default function ThreadPage() {
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="ml-3 flex-1">
-                <h1 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">Error Loading Thread</h1>
-                <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
+                <h1 className="text-lg font-medium mb-2">Error Loading Thread</h1>
+                <p className="text-red-600 dark:text-red-500 mb-4">{error}</p>
                 <div className="flex gap-3">
                   <button
                     onClick={fetchThreadData}

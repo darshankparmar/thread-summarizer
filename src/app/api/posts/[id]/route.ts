@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
 import { UpdatePostRequest } from '@/services/api/types';
 import { getValidatedForumsTokenFromRequest } from '@/shared/lib/auth/auth-utils';
+import { handleApiRouteError } from '@/shared/lib/api';
 
 export async function GET(
   request: NextRequest,
@@ -17,15 +18,9 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching post:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch post' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to fetch post'
+    });
   }
 }
 
@@ -61,20 +56,9 @@ export async function PUT(
     });
 
   } catch (error) {
-    // If error is already a NextResponse (from auth validation), return it
-    if (error instanceof NextResponse) {
-      return error;
-    }
-
-    console.error('Error updating post:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to update post' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to update post'
+    });
   }
 }
 
@@ -95,19 +79,8 @@ export async function DELETE(
     });
 
   } catch (error) {
-    // If error is already a NextResponse (from auth validation), return it
-    if (error instanceof NextResponse) {
-      return error;
-    }
-
-    console.error('Error deleting post:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to delete post' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to delete post'
+    });
   }
 }

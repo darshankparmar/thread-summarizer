@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { forumsApiClient, ApiError } from '@/services/api';
+import { forumsApiClient } from '@/services/api';
+import { handleApiRouteError } from '@/shared/lib/api';
 
 export async function GET(
   request: NextRequest,
@@ -26,36 +27,8 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Thread fetch error:', error);
-
-    if (error instanceof ApiError) {
-      // Map specific API errors to appropriate HTTP status codes
-      let statusCode = 500;
-      if (error.statusCode === 404) {
-        statusCode = 404;
-      } else if (error.statusCode === 401) {
-        statusCode = 401;
-      } else if (error.statusCode === 429) {
-        statusCode = 429;
-      }
-
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: error.message,
-          statusCode: error.statusCode
-        },
-        { status: statusCode }
-      );
-    }
-
-    // Generic error handling
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Internal server error occurred while fetching thread data' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Internal server error occurred while fetching thread data'
+    });
   }
 }

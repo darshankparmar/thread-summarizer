@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UpdateThreadRequest, forumsApiClient } from '@/services/api';
 import { getValidatedForumsTokenFromSession } from '@/shared/lib/auth/auth-utils';
+import { handleApiRouteError } from '@/shared/lib/api';
 
 interface RouteParams {
   params: Promise<{
@@ -19,15 +20,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
   } catch (error) {
-    console.error('Error fetching thread:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch thread'
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to fetch thread'
+    });
   }
 }
 
@@ -43,7 +38,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const body: UpdateThreadRequest = await request.json();
-    
+
     const thread = await forumsApiClient.threads.updateThread(id, body, token);
 
     return NextResponse.json({
@@ -52,15 +47,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     });
 
   } catch (error) {
-    console.error('Error updating thread:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to update thread'
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to update thread'
+    });
   }
 }
 
@@ -74,7 +63,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         { status: 401 }
       );
     }
-    
+
     await forumsApiClient.threads.deleteThread(id, token);
 
     return NextResponse.json({
@@ -83,14 +72,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
   } catch (error) {
-    console.error('Error deleting thread:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to delete thread'
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to delete thread'
+    });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
 import { UpdateThreadRequest } from '@/services/api/types';
 import { getValidatedForumsTokenFromRequest } from '@/shared/lib/auth/auth-utils';
+import { handleApiRouteError } from '@/shared/lib/api';
 
 export async function GET(
   request: NextRequest,
@@ -17,15 +18,9 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching thread:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch thread' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to fetch thread'
+    });
   }
 }
 
@@ -64,20 +59,9 @@ export async function PUT(
     });
 
   } catch (error) {
-    // If error is already a NextResponse (from auth validation), return it
-    if (error instanceof NextResponse) {
-      return error;
-    }
-
-    console.error('Error updating thread:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to update thread' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to update thread'
+    });
   }
 }
 
@@ -98,19 +82,8 @@ export async function DELETE(
     });
 
   } catch (error) {
-    // If error is already a NextResponse (from auth validation), return it
-    if (error instanceof NextResponse) {
-      return error;
-    }
-
-    console.error('Error deleting thread:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to delete thread' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to delete thread'
+    });
   }
 }

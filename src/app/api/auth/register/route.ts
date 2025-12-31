@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RegisterRequest, RegisterResponse } from '@/shared/types';
 import { apiMiddleware } from '@/infrastructure/security';
 import { authService } from '@/domains/auth/services';
+import { handleApiRouteError } from '@/shared/lib/api';
 
 /**
  * POST /api/auth/register
@@ -21,7 +22,7 @@ async function handleRegisterRequest(request: NextRequest): Promise<NextResponse
   try {
     // Parse and validate request body
     const body: RegisterRequest = await request.json();
-    
+
     // Validate request body structure
     const bodyValidation = validateRegisterRequest(body);
     if (!bodyValidation.isValid) {
@@ -49,7 +50,7 @@ async function handleRegisterRequest(request: NextRequest): Promise<NextResponse
       user: registerResult.user
     };
 
-    return NextResponse.json(response, { 
+    return NextResponse.json(response, {
       status: 201,
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -58,14 +59,9 @@ async function handleRegisterRequest(request: NextRequest): Promise<NextResponse
     });
 
   } catch (error) {
-    console.error('Register API error:', error);
-    
-    const response: RegisterResponse = {
-      success: false,
-      error: 'Internal server error'
-    };
-
-    return NextResponse.json(response, { status: 500 });
+    return handleApiRouteError(error, {
+      defaultMessage: 'Registration Failed. Internal server error'
+    });
   }
 }
 
@@ -78,7 +74,7 @@ function validateRegisterRequest(body: unknown): { isValid: boolean; error?: str
   }
 
   const registerData = body as Record<string, unknown>;
-  
+
   // Check required fields
   if (!registerData.username || typeof registerData.username !== 'string') {
     return { isValid: false, error: 'username field is required and must be a string' };
@@ -140,7 +136,7 @@ function validateRegisterRequest(body: unknown): { isValid: boolean; error?: str
     if (typeof registerData.displayName !== 'string') {
       return { isValid: false, error: 'displayName must be a string' };
     }
-    
+
     const displayName = registerData.displayName.trim();
     if (displayName.length > 100) {
       return { isValid: false, error: 'displayName is too long (maximum 100 characters)' };
@@ -151,7 +147,7 @@ function validateRegisterRequest(body: unknown): { isValid: boolean; error?: str
   const allowedFields = ['username', 'email', 'password', 'displayName'];
   const bodyFields = Object.keys(registerData);
   const unexpectedFields = bodyFields.filter(field => !allowedFields.includes(field));
-  
+
   if (unexpectedFields.length > 0) {
     return { isValid: false, error: `Unexpected fields: ${unexpectedFields.join(', ')}` };
   }

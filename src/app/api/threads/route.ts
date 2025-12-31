@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
 import { CreateThreadRequest } from '@/services/api/types';
 import { getValidatedForumsTokenFromRequest } from '@/shared/lib/auth/auth-utils';
+import { handleApiRouteError } from '@/shared/lib/api/error-response-handler';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,17 +19,10 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching threads:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch threads',
-        threads: [], // Provide empty array on error
-        count: 0
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to fetch threads',
+      includeArrayFields: true
+    });
   }
 }
 
@@ -61,18 +55,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating thread:', error);
-
-    if (error instanceof NextResponse) {
-      return error;
-    }
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to create thread' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to create thread'
+    });
   }
 }

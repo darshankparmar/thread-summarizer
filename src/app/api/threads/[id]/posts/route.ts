@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
+import { handleApiRouteError } from '@/shared/lib/api';
 
 export async function GET(
   request: NextRequest,
@@ -16,14 +17,8 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching thread posts:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch thread posts' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to fetch thread posts'
+    });
   }
 }

@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { forumsApiClient } from '@/services/api';
 import { CreateTagRequest } from '@/services/api/types';
 import { getValidatedForumsTokenFromRequest } from '@/shared/lib/auth/auth-utils';
+import { handleApiRouteError } from '@/shared/lib/api';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const params = Object.fromEntries(searchParams.entries());
-    
+
     const tags = await forumsApiClient.tags.getTags(params);
 
     return NextResponse.json({
@@ -16,15 +17,9 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching tags:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch tags' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to fetch tags'
+    });
   }
 }
 
@@ -48,7 +43,7 @@ export async function POST(request: NextRequest) {
       description: description?.trim(),
       color: color?.trim()
     };
-    
+
     const newTag = await forumsApiClient.tags.createTag(tagData, forumsToken);
 
     return NextResponse.json({
@@ -57,19 +52,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    // If error is already a NextResponse (from auth validation), return it
-    if (error instanceof NextResponse) {
-      return error;
-    }
-
-    console.error('Error creating tag:', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to create tag' 
-      },
-      { status: 500 }
-    );
+    return handleApiRouteError(error, {
+      defaultMessage: 'Failed to create tag'
+    });
   }
 }
