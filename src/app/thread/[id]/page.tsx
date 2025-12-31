@@ -11,6 +11,7 @@ import ThreadStatus from '@/domains/threads/components/ThreadStatus';
 import PostEngagement from '@/domains/posts/components/PostEngagement';
 import PostThread from '@/domains/posts/components/PostThread';
 import { EditComposer } from '@/components/EditComposer';
+import { RichTextDisplay } from '@/components/RichTextDisplay';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { Button } from '@/shared/components/ui/button';
 import { Edit, Trash2, MoreHorizontal } from 'lucide-react';
@@ -362,8 +363,8 @@ export default function ThreadPage() {
                     </div>
                   </div>
                   
-                  <div className="prose max-w-none mb-4">
-                    <p className="text-text-secondary whitespace-pre-wrap">{thread.body}</p>
+                  <div className="mb-4">
+                    <RichTextDisplay content={thread.body} />
                   </div>
 
                   {/* Thread Engagement */}

@@ -12,7 +12,7 @@ import PostEngagement from './PostEngagement';
 import Avatar from '@/shared/components/common/Avatar';
 import { ForumsPost, ForumsThread } from '@/shared/types';
 import { formatTimestamp } from '@/shared/lib/utils/formatters';
-import { sanitizeHTML } from '@/shared/lib/validation/sanitizer';
+import { RichTextDisplay } from '@/components/RichTextDisplay';
 import {
   Reply,
   MessageSquare,
@@ -190,9 +190,10 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
               <>
                 <div
                   ref={contentRef}
-                  className={`prose prose-sm max-w-none text-text-primary whitespace-pre-wrap transition-all duration-300 ${expanded ? 'max-h-none' : 'max-h-[300px] overflow-hidden'}`}
-                  dangerouslySetInnerHTML={{ __html: sanitizeHTML(currentPost.body) }}
-                />
+                  className={`transition-all duration-300 ${expanded ? 'max-h-none' : 'max-h-[300px] overflow-hidden'}`}
+                >
+                  <RichTextDisplay content={currentPost.body} />
+                </div>
                 {isOverflowing && (
                   <Button
                     onClick={() => setExpanded(!expanded)}

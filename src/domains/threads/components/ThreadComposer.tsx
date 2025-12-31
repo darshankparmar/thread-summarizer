@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { ForumsTag } from '@/shared/types';
 import { clientApi } from '@/services/client-api';
 import { Save, Send, AlertCircle } from 'lucide-react';
-import { RichTextEditor } from '@/components/RichTextEditor';
+import { TiptapEditor } from '@/components/TiptapEditor';
 import { TagSelector } from '@/components/TagSelector';
 import { Spinner } from '@/shared/components/ui/spinner';
 
@@ -231,7 +231,7 @@ export function ThreadComposer({ onThreadCreated, className = "" }: ThreadCompos
             {/* <label className="text-sm font-medium">
               Content *
             </label> */}
-            <RichTextEditor
+            <TiptapEditor
               value={body}
               onChange={setBody}
               placeholder="Write your thread content..."

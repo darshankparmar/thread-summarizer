@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
-import { RichTextEditor } from '../../../components/RichTextEditor';
+import { TiptapEditor } from '../../../components/TiptapEditor';
 import { ForumsPost } from '@/shared/types';
 import { clientApi } from '@/services/client-api';
 import { Send, Reply, AlertCircle, X } from 'lucide-react';
@@ -166,7 +166,7 @@ export function PostComposer({
           )}
 
           <div className="space-y-2">
-            <RichTextEditor
+            <TiptapEditor
               value={body}
               onChange={setBody}
               placeholder={placeholder}

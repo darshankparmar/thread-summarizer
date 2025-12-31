@@ -37,6 +37,7 @@ Thread Summarizer is a full-stack web application that analyzes online forum dis
 * **TypeScript** – Type-safe development
 * **Tailwind CSS** – Utility-first styling
 * **ShadCN UI** – Component library
+* **Tiptap** – Modern rich text editor
 * **Lucide React** – Icon library
 
 ### Backend

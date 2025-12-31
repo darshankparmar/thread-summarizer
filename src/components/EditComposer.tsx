@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
-import { RichTextEditor } from './RichTextEditor';
+import { TiptapEditor } from './TiptapEditor';
 import { TagSelector } from './TagSelector';
 import { ForumsThread, ForumsPost, ForumsTag } from '@/shared/types';
 import { clientApi } from '@/services/client-api';
@@ -224,7 +224,7 @@ export function EditComposer({
 
           {/* Content Editor */}
           <div className="space-y-2">
-            <RichTextEditor
+            <TiptapEditor
               value={body}
               onChange={setBody}
               placeholder={`Edit your ${type} content...`}
