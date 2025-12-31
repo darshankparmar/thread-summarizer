@@ -1,3 +1,4 @@
+<a id="top"></a>
 # Thread Summarizer
 
 *Transform Conversations into Clear, Actionable Insights*
@@ -148,4 +149,6 @@ src/
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-[⬆ Return](#top)
+---
+
+<p align="right"><a href="#top">⬆ Return to top</a></p>
