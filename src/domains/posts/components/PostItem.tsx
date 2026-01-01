@@ -86,30 +86,25 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
       sessionUser.roles?.includes('moderator');
   };
 
-  const indentClass = level > 0 ? `ml-${Math.min(level * 4, 16)}` : '';
-
   return (
-    <div className={`post-item ${indentClass}`}>
-      <Card className={`
-        mb-4 transition-all duration-200 hover:shadow-md
-        ${level > 0 ? 'border-l-4 border-l-primary/20' : ''}
-        ${currentPost.bestAnswer ? 'ring-2 ring-green-500/20 bg-green-50/30 dark:bg-green-900/10' : ''}
-      `}>
-        <CardContent className="p-4">
+    <div
+      className={`post-item relative pl-${Math.min(level * 4, 12)} border-l ${level > 0 ? 'border-muted' : 'border-transparent'}`}
+    >
+      <Card className="p-4 mb-3 bg-background">
+        {/* <CardContent className="p-4"> */}
           {/* Post Header */}
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-3">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-2">
               <Avatar
                 src={currentPost.user?.avatar}
                 username={currentPost.user?.username || 'Unknown User'}
                 size="sm"
-                className="flex-shrink-0"
               />
-              <div className="min-w-0 flex-1">
+              <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-text-primary">
+                  <div className="text-sm font-medium">
                     {currentPost.user?.displayName || currentPost.user?.username || 'Unknown User'}
-                  </span>
+                  </div>
                   {currentPost.bestAnswer && (
                     <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                       <Award className="w-3 h-3 mr-1" />
@@ -117,9 +112,9 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-text-secondary mt-1">
+                <div className="flex items-center gap-1 text-xs text-text-secondary mt-1">
                   <Clock className="w-3 h-3" />
-                  <span>{formatTimestamp(currentPost.createdAt)}</span>
+                  <div className="text-xs text-muted-foreground">{formatTimestamp(currentPost.createdAt)}</div>
                   {currentPost.updatedAt && currentPost.updatedAt !== currentPost.createdAt && (
                     <span className="text-text-secondary/70">(edited)</span>
                   )}
@@ -145,7 +140,7 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
                       className="fixed inset-0 z-10"
                       onClick={() => setShowActions(false)}
                     />
-                    <div className="absolute right-0 top-10 bg-[hsl(var(--popover))] text-popover-foreground border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[120px]">
+                    <div className="absolute right-0 top-7 bg-[hsl(var(--popover))] text-popover-foreground border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[120px]">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -178,7 +173,7 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
           </div>
 
           {/* Post Content */}
-          <div className="mb-4">
+          <div className="mb-3">
             {isEditing ? (
               <EditComposer
                 item={currentPost}
@@ -216,15 +211,15 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
           />
 
           {/* Post Actions */}
-          <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {session?.user && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowReplyComposer(!showReplyComposer)}
-                className="text-text-secondary hover:text-text-primary"
+                className="flex items-center gap-1 hover:text-primary"
               >
-                <Reply className="w-4 h-4 mr-1" />
+                <Reply className="w-4 h-4" />
                 Reply
               </Button>
             )}
@@ -234,7 +229,7 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowReplies(!showReplies)}
-                className="text-text-secondary hover:text-text-primary"
+                className="flex items-center gap-1 hover:text-primary"
               >
                 <MessageSquare className="w-4 h-4 mr-1" />
                 {childReplies.length} {childReplies.length === 1 ? 'Reply' : 'Replies'}
@@ -259,7 +254,7 @@ export function PostItem({ post, threadId, allPosts, onReplyCreated, onPostDelet
               />
             </div>
           )}
-        </CardContent>
+        {/* </CardContent> */}
       </Card>
 
       {/* Nested Replies */}

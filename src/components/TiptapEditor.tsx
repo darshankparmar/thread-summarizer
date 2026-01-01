@@ -66,7 +66,7 @@ export function TiptapEditor({
     },
     editorProps: {
       attributes: {
-        class: `prose prose-sm max-w-none focus:outline-none min-h-[${minHeight}] p-4 text-text-primary`,
+        class: `prose prose-sm max-w-none focus:outline-none p-4 text-text-primary`,
         style: `min-height: ${minHeight}`
       }
     }
@@ -260,7 +260,10 @@ export function TiptapEditor({
       </div>
 
       {/* Editor Content */}
-      <div className="bg-background">
+      <div 
+        className="bg-background overflow-y-auto"
+        style={{ maxHeight: minHeight }}
+      >
         <EditorContent 
           editor={editor} 
           className="tiptap-editor"
